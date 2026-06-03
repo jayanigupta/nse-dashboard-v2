@@ -116,7 +116,7 @@ def main() -> None:
     if st.button("Refresh data now"):
         if LOCAL_FILE.exists():
             LOCAL_FILE.unlink()
-        st.experimental_rerun()
+        st.rerun()
 
     df, source_info = get_data()
 
