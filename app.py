@@ -147,7 +147,7 @@ def main() -> None:
     if sort_by in df.columns:
         df = df.sort_values(sort_by, ascending=ascending)
 
-    display_columns = [col for col in ["SYMBOL", "DELIV_PER", "TTL_TRD_QNTY", "OPEN", "HIGH", "LOW", "CLOSE"] if col in df.columns]
+    display_columns = [col for col in ["SYMBOL", "DELIV_PER", "TTL_TRD_QNTY", "VOLUME", "OPEN", "HIGH", "LOW", "CLOSE"] if col in df.columns]
 
     st.dataframe(df[display_columns].reset_index(drop=True))
 
