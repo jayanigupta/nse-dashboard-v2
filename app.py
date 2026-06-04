@@ -72,7 +72,7 @@ def load_dataframe(path: str, mtime: float) -> pd.DataFrame:
         ).round(2)
 
     except Exception as e:
-        print("Could not load avg_volume.csv:", e)
+        st.error(f"Could not load avg_volume.csv: {e}")
     if "DELIV_PER" in df.columns:
         df = df[df["DELIV_PER"].notna()]
 
@@ -138,6 +138,7 @@ def main() -> None:
 
     df, source_info = get_data()
 
+    st.write(df.columns.tolist())
     if source_info["status"] == "downloaded":
         st.success(source_info["message"])
     elif source_info["status"] == "cached":
