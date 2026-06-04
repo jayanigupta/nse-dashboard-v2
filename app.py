@@ -50,11 +50,29 @@ def load_dataframe(path: str, mtime: float) -> pd.DataFrame:
     df = pd.read_csv(path)
     df.columns = df.columns.str.strip()
 
+    if "DATE1" in df.columns:
+        df["DATE1"] = pd.to_datetime(df["DATE1"], errors="coerce", dayfirst=True)
     if "DELIV_PER" in df.columns:
         df["DELIV_PER"] = pd.to_numeric(df["DELIV_PER"], errors="coerce")
     if "TTL_TRD_QNTY" in df.columns:
         df["TTL_TRD_QNTY"] = pd.to_numeric(df["TTL_TRD_QNTY"], errors="coerce")
 
+    try:
+        avg_volume = pd.read_csv("avg_volume.csv")
+
+        df = df.merge(
+            avg_volume,
+            on="SYMBOL",
+            how="left"
+        )
+
+        df["VOL_RATIO"] = (
+            df["TTL_TRD_QNTY"] /
+            df["AVG_30D_VOLUME"]
+        ).round(2)
+
+    except Exception as e:
+        print("Could not load avg_volume.csv:", e)
     if "DELIV_PER" in df.columns:
         df = df[df["DELIV_PER"].notna()]
 
@@ -135,7 +153,17 @@ def main() -> None:
 
     search = st.text_input("Search Stock symbol")
     min_delivery = st.slider("Minimum Delivery %", 0, 100, 70)
-    sort_by = st.selectbox("Sort by", ["DELIV_PER", "TTL_TRD_QNTY", "SYMBOL"], index=0)
+    sort_by = st.selectbox(
+        "Sort by",
+        [
+            "DELIV_PER",
+            "VOL_RATIO",
+            "AVG_30D_VOLUME",
+            "TTL_TRD_QNTY",
+            "SYMBOL",
+        ],
+        index=0,
+    )
     order = st.radio("Sort order", ["Descending", "Ascending"], index=0)
 
     if search:
@@ -147,7 +175,21 @@ def main() -> None:
     if sort_by in df.columns:
         df = df.sort_values(sort_by, ascending=ascending)
 
-    display_columns = [col for col in ["SYMBOL", "DELIV_PER", "TTL_TRD_QNTY", "VOLUME", "OPEN", "HIGH", "LOW", "CLOSE"] if col in df.columns]
+    display_columns = [
+        col
+        for col in [
+            "SYMBOL",
+            "DELIV_PER",
+            "TTL_TRD_QNTY",
+            "AVG_30D_VOLUME",
+            "VOL_RATIO",
+            "OPEN_PRICE",
+            "HIGH_PRICE",
+            "LOW_PRICE",
+            "CLOSE_PRICE",
+        ]
+        if col in df.columns
+    ]
 
     st.dataframe(df[display_columns].reset_index(drop=True))
 
