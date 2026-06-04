@@ -153,6 +153,12 @@ def main() -> None:
     )
 
     search = st.text_input("Search Stock symbol")
+
+    index_filter = st.selectbox(
+        "Index Filter",
+        ["All Stocks", "NIFTY 500"]
+    )
+    
     min_delivery = st.slider("Minimum Delivery %", 0, 100, 70)
     sort_by = st.selectbox(
         "Sort by",
@@ -169,6 +175,18 @@ def main() -> None:
 
     if search:
         df = df[df["SYMBOL"].str.contains(search.upper(), na=False)]
+
+    if index_filter == "NIFTY 500":
+        nifty500 = pd.read_csv("nifty500.csv")
+
+        symbols = (
+            nifty500["Symbol"]
+            .astype(str)
+            .str.strip()
+            .tolist()
+        )
+
+        df = df[df["SYMBOL"].isin(symbols)]
 
     df = df[df["DELIV_PER"] >= min_delivery]
 
