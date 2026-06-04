@@ -51,7 +51,11 @@ def load_dataframe(path: str, mtime: float) -> pd.DataFrame:
     df.columns = df.columns.str.strip()
 
     if "DATE1" in df.columns:
-        df["DATE1"] = pd.to_datetime(df["DATE1"], errors="coerce", dayfirst=True)
+        df["DATE1"] = pd.to_datetime(
+            df["DATE1"],
+            errors="coerce",
+            dayfirst=True
+        ).dt.strftime("%d-%b-%Y")
     if "DELIV_PER" in df.columns:
         df["DELIV_PER"] = pd.to_numeric(df["DELIV_PER"], errors="coerce")
     if "TTL_TRD_QNTY" in df.columns:
