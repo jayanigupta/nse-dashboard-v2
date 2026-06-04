@@ -197,6 +197,7 @@ def main() -> None:
     display_columns = [
         col
         for col in [
+            "DATE1",
             "SYMBOL",
             "DELIV_PER",
             "TTL_TRD_QNTY",
