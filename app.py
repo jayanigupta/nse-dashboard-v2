@@ -203,8 +203,6 @@ def main() -> None:
             "AVG_30D_VOLUME",
             "VOL_RATIO",
             "OPEN_PRICE",
-            "HIGH_PRICE",
-            "LOW_PRICE",
             "CLOSE_PRICE",
         ]
         if col in df.columns
