@@ -142,6 +142,46 @@ def main() -> None:
 
     df, source_info = get_data()
 
+
+    df_analytics = df.copy()
+
+    df_analytics["DATE1"] = pd.to_datetime(df_analytics["DATE1"], errors="coerce")
+    df_analytics = df_analytics[df_analytics["DATE1"].notna()]
+
+    latest_date = df_analytics["DATE1"].max()
+
+    start_30d = latest_date - pd.Timedelta(days=30)
+
+    df_30d = df_analytics[df_analytics["DATE1"] >= start_30d]
+    today_df = df_analytics[df_analytics["DATE1"] == latest_date]
+
+    avg_30d = (
+        df_30d.groupby("SYMBOL")["TTL_TRD_QNTY"]
+        .mean()
+        .reset_index()
+        .rename(columns={"TTL_TRD_QNTY": "AVG_30D_VOLUME"})
+    )
+
+    today_vol = (
+        today_df.groupby("SYMBOL")["TTL_TRD_QNTY"]
+        .sum()
+        .reset_index()
+        .rename(columns={"TTL_TRD_QNTY": "TODAY_VOLUME"})
+    )
+
+    merged = pd.merge(avg_30d, today_vol, on="SYMBOL", how="inner")
+
+    merged["VOLUME_SPIKE_%"] = (
+        (merged["TODAY_VOLUME"] - merged["AVG_30D_VOLUME"]) /
+        merged["AVG_30D_VOLUME"]
+    ) * 100
+
+    top_10_spikes = merged.sort_values(
+        "VOLUME_SPIKE_%",
+        ascending=False
+    ).head(10)
+    
+
     st.write(df.columns.tolist())
     if source_info["status"] == "downloaded":
         st.success(source_info["message"])
