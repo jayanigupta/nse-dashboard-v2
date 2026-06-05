@@ -61,24 +61,8 @@ def load_dataframe(path: str, mtime: float) -> pd.DataFrame:
     if "TTL_TRD_QNTY" in df.columns:
         df["TTL_TRD_QNTY"] = pd.to_numeric(df["TTL_TRD_QNTY"], errors="coerce")
 
-    timeframe = st.radio(
-        "Timeframe",
-        ["1D", "1W", "1M", "3M"],
-        horizontal=True
-    )
-    
-
     try:
-        file_map = {
-            "1D": "avg_volume_1d.csv",
-            "1W": "avg_volume_1w.csv",
-            "1M": "avg_volume_1m.csv",
-            "3M": "avg_volume_3m.csv",
-        }
-
-        avg_volume = pd.read_csv(
-            file_map[timeframe]
-        )
+        avg_volume = pd.read_csv("avg_volume.csv")
 
         df = df.merge(
             avg_volume,
@@ -174,7 +158,6 @@ def main() -> None:
     )
 
     search = st.text_input("Search Stock symbol")
-
 
     index_filter = st.selectbox(
         "Index Filter",
