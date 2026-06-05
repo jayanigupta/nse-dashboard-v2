@@ -8,11 +8,14 @@ import streamlit as st
 DATA_DIR = Path(".")
 LOCAL_FILE = DATA_DIR / "sec_bhavdata_latest.csv"
 FALLBACK_FILE = DATA_DIR / "sec_bhavdata_full_02062026.csv"
+
 NSE_BASE_URL = "https://nsearchives.nseindia.com/products/content"
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
     "Referer": "https://www.nseindia.com/",
 }
+
 MAX_LOOKBACK_DAYS = 7
 STALE_HOURS = 24
 
@@ -46,45 +49,24 @@ def is_file_stale(path: Path) -> bool:
 
 
 @st.cache_data
-def load_dataframe(path: str, mtime: float) -> pd.DataFrame:
+def load_data(path: str, mtime: float) -> pd.DataFrame:
     df = pd.read_csv(path)
-    df.columns = df.columns.str.strip()
+    df.columns = df.columns.str.strip().str.upper()
 
     if "DATE1" in df.columns:
-        df["DATE1"] = pd.to_datetime(
-            df["DATE1"],
-            errors="coerce",
-            dayfirst=True
-        ).dt.strftime("%d-%b-%Y")
+        df["DATE1"] = pd.to_datetime(df["DATE1"], errors="coerce", dayfirst=True)
+
     if "DELIV_PER" in df.columns:
         df["DELIV_PER"] = pd.to_numeric(df["DELIV_PER"], errors="coerce")
+
     if "TTL_TRD_QNTY" in df.columns:
         df["TTL_TRD_QNTY"] = pd.to_numeric(df["TTL_TRD_QNTY"], errors="coerce")
-
-    try:
-        avg_volume = pd.read_csv("avg_volume.csv")
-
-        df = df.merge(
-            avg_volume,
-            on="SYMBOL",
-            how="left"
-        )
-
-        df["VOL_RATIO"] = (
-            df["TTL_TRD_QNTY"] /
-            df["AVG_30D_VOLUME"]
-        ).round(2)
-
-    except Exception as e:
-        st.error(f"Could not load avg_volume.csv: {e}")
-    if "DELIV_PER" in df.columns:
-        df = df[df["DELIV_PER"].notna()]
 
     return df
 
 
 def get_data() -> tuple[pd.DataFrame, dict]:
-    source_info: dict = {
+    source_info = {
         "source_path": None,
         "source_date": None,
         "status": None,
@@ -99,201 +81,123 @@ def get_data() -> tuple[pd.DataFrame, dict]:
                 source_info["source_path"] = str(LOCAL_FILE)
                 source_info["source_date"] = candidate_date
                 source_info["status"] = "downloaded"
-                source_info["message"] = f"Downloaded latest available bhavcopy for {candidate_date:%Y-%m-%d}."
+                source_info["message"] = f"Downloaded latest bhavcopy {candidate_date:%Y-%m-%d}"
                 break
             except Exception:
                 continue
         else:
             source_info["status"] = "download_failed"
-            source_info["message"] = "Could not download today's bhavcopy. Using the last available local copy or fallback data."
+            source_info["message"] = "Using last available data"
 
     if LOCAL_FILE.exists():
         path = LOCAL_FILE
-        source_info.setdefault("source_path", str(path))
-        source_info.setdefault("source_date", datetime.date.fromtimestamp(path.stat().st_mtime))
-        source_info.setdefault("status", "cached")
-        df = load_dataframe(str(path), path.stat().st_mtime)
+        df = load_data(str(path), path.stat().st_mtime)
+        source_info["source_path"] = str(path)
+        source_info["source_date"] = datetime.date.fromtimestamp(path.stat().st_mtime)
+        source_info["status"] = "cached"
         return df, source_info
 
     if FALLBACK_FILE.exists():
         path = FALLBACK_FILE
+        df = load_data(str(path), path.stat().st_mtime)
         source_info["source_path"] = str(path)
-        source_info["source_date"] = None
         source_info["status"] = "fallback"
-        source_info["message"] = "Loaded sample fallback data because no downloaded copy is available."
-        df = load_dataframe(str(path), path.stat().st_mtime)
         return df, source_info
 
-    raise FileNotFoundError(
-        "No bhavcopy data file is available. Please run the download script or place a CSV file in the workspace."
-    )
+    raise FileNotFoundError("No data available")
 
-def compute_avg_volume():
-    files = sorted(Path("data").glob("sec_bhavdata_full_*.csv"))
 
-    all_dfs = []
-
-    for file in files:
-        df = pd.read_csv(file)
-        df.columns = df.columns.str.strip()
-
-        if "SYMBOL" in df.columns and "TTL_TRD_QNTY" in df.columns:
-            df["TTL_TRD_QNTY"] = pd.to_numeric(df["TTL_TRD_QNTY"], errors="coerce")
-            all_dfs.append(df[["SYMBOL", "TTL_TRD_QNTY"]])
-
-    if not all_dfs:
-        return pd.DataFrame(columns=["SYMBOL", "AVG_30D_VOLUME"])
-
-    history = pd.concat(all_dfs, ignore_index=True)
-
-    return (
-        history.groupby("SYMBOL")["TTL_TRD_QNTY"]
-        .mean()
-        .reset_index()
-        .rename(columns={"TTL_TRD_QNTY": "AVG_30D_VOLUME"})
-    )
-
-def main() -> None:
+def main():
     st.title("NSE Delivery Dashboard")
-    st.write(
-        "This dashboard updates daily from NSE archives and shows delivery data in sorted order."
-    )
-
-    if st.button("Refresh data now"):
-        if LOCAL_FILE.exists():
-            LOCAL_FILE.unlink()
-        st.rerun()
 
     df, source_info = get_data()
 
-    avg_df = compute_avg_volume()
+    # -----------------------------
+    # FIX: ensure required columns exist
+    # -----------------------------
+    if "TTL_TRD_QNTY" not in df.columns:
+        st.error("TTL_TRD_QNTY column missing in dataset")
+        return
 
-    df = df.merge(avg_df, on="SYMBOL", how="left")
-
-    df["VOL_RATIO"] = (
-         df["TTL_TRD_QNTY"] / df["AVG_30D_VOLUME"]
-    ).round(2)
-
-
+    # -----------------------------
+    # 30D rolling average (LIVE)
+    # -----------------------------
     df_analytics = df.copy()
 
-    df_analytics["DATE1"] = pd.to_datetime(df_analytics["DATE1"], errors="coerce").dt.date
-    df_analytics = df_analytics[df_analytics["DATE1"].notna()]
+    if "DATE1" in df_analytics.columns:
+        df_analytics = df_analytics[df_analytics["DATE1"].notna()]
 
-    latest_date = df_analytics["DATE1"].max()
+        latest_date = df_analytics["DATE1"].max()
+        start_30d = latest_date - pd.Timedelta(days=30)
 
-    start_30d = latest_date - pd.Timedelta(days=30)
+        df_30d = df_analytics[df_analytics["DATE1"] >= start_30d]
+        today_df = df_analytics[df_analytics["DATE1"] == latest_date]
 
-    df_30d = df_analytics[df_analytics["DATE1"] >= start_30d]
-    today_df = df_analytics[df_analytics["DATE1"] == latest_date]
-
-    avg_30d = (
-        df_30d.groupby("SYMBOL")["TTL_TRD_QNTY"]
-        .mean()
-        .reset_index()
-        .rename(columns={"TTL_TRD_QNTY": "AVG_30D_VOLUME"})
-    )
-
-    today_vol = (
-        today_df.groupby("SYMBOL")["TTL_TRD_QNTY"]
-        .sum()
-        .reset_index()
-        .rename(columns={"TTL_TRD_QNTY": "TODAY_VOLUME"})
-    )
-
-    merged = pd.merge(avg_30d, today_vol, on="SYMBOL", how="inner")
-
-    merged["VOLUME_SPIKE_%"] = (
-        (merged["TODAY_VOLUME"] - merged["AVG_30D_VOLUME"]) /
-        merged["AVG_30D_VOLUME"]
-    ) * 100
-
-    top_10_spikes = merged.sort_values(
-        "VOLUME_SPIKE_%",
-        ascending=False
-    ).head(10)
-    
-
-    st.write(df.columns.tolist())
-    if source_info["status"] == "downloaded":
-        st.success(source_info["message"])
-    elif source_info["status"] == "cached":
-        st.info(f"Using cached data from {source_info['source_date']:%Y-%m-%d}.")
-    elif source_info["status"] == "download_failed":
-        st.warning(source_info["message"])
-    elif source_info["status"] == "fallback":
-        st.warning(source_info["message"])
-
-    st.markdown(
-        f"**Data source:** `{source_info['source_path']}`"
-    )
-
-    search = st.text_input("Search Stock symbol")
-
-    index_filter = st.selectbox(
-        "Index Filter",
-        ["All Stocks", "NIFTY 500"]
-    )
-    
-    min_delivery = st.slider("Minimum Delivery %", 0, 100, 70)
-    sort_by = st.selectbox(
-        "Sort by",
-        [
-            "DELIV_PER",
-            "VOL_RATIO",
-            "AVG_30D_VOLUME",
-            "TTL_TRD_QNTY",
-            "SYMBOL",
-        ],
-        index=0,
-    )
-    order = st.radio("Sort order", ["Descending", "Ascending"], index=0)
-
-    if search:
-        df = df[df["SYMBOL"].str.contains(search.upper(), na=False)]
-
-    if index_filter == "NIFTY 500":
-        nifty500 = pd.read_csv("nifty500.csv")
-
-        symbols = (
-            nifty500["Symbol"]
-            .astype(str)
-            .str.strip()
-            .tolist()
+        avg_30d = (
+            df_30d.groupby("SYMBOL")["TTL_TRD_QNTY"]
+            .mean()
+            .reset_index()
+            .rename(columns={"TTL_TRD_QNTY": "AVG_30D_VOLUME"})
         )
 
-        df = df[df["SYMBOL"].isin(symbols)]
+        today_vol = (
+            today_df.groupby("SYMBOL")["TTL_TRD_QNTY"]
+            .sum()
+            .reset_index()
+            .rename(columns={"TTL_TRD_QNTY": "TODAY_VOLUME"})
+        )
 
-    df = df[df["DELIV_PER"] >= min_delivery]
+        merged = pd.merge(avg_30d, today_vol, on="SYMBOL", how="inner")
 
-    ascending = order == "Ascending"
-    if sort_by in df.columns:
-        df = df.sort_values(sort_by, ascending=ascending)
+        merged["VOLUME_SPIKE_%"] = (
+            (merged["TODAY_VOLUME"] - merged["AVG_30D_VOLUME"])
+            / merged["AVG_30D_VOLUME"].replace(0, None)
+        ) * 100
 
-    display_columns = [
-        col
-        for col in [
-            "DATE1",
-            "SYMBOL",
-            "DELIV_PER",
-            "TTL_TRD_QNTY",
-            "AVG_30D_VOLUME",
-            "VOL_RATIO",
-            "OPEN_PRICE",
-            "CLOSE_PRICE",
-        ]
-        if col in df.columns
+        top_10_spikes = merged.sort_values(
+            "VOLUME_SPIKE_%",
+            ascending=False
+        ).head(10)
+    else:
+        merged = pd.DataFrame()
+        top_10_spikes = pd.DataFrame()
+
+    # -----------------------------
+    # VOL RATIO (safe)
+    # -----------------------------
+    df["VOL_RATIO"] = None
+    if "AVG_30D_VOLUME" in df.columns:
+        df["VOL_RATIO"] = (
+            df["TTL_TRD_QNTY"] / df["AVG_30D_VOLUME"]
+        ).replace([float("inf"), -float("inf")], None)
+
+    # -----------------------------
+    # UI
+    # -----------------------------
+    st.subheader("🔥 Top 10 Volume Spike Stocks")
+    if not top_10_spikes.empty:
+        st.dataframe(
+            top_10_spikes[
+                ["SYMBOL", "TODAY_VOLUME", "AVG_30D_VOLUME", "VOLUME_SPIKE_%"]
+            ],
+            use_container_width=True
+        )
+
+    st.subheader("📊 Full Table")
+
+    display_cols = [
+        "DATE1",
+        "SYMBOL",
+        "DELIV_PER",
+        "TTL_TRD_QNTY",
+        "VOL_RATIO",
+        "OPEN_PRICE",
+        "CLOSE_PRICE",
     ]
-    st.subheader("🔥 Top 10 Volume Spike Stocks (vs 30D Avg)")
 
-    st.dataframe(
-        top_10_spikes[
-            ["SYMBOL", "TODAY_VOLUME", "AVG_30D_VOLUME", "VOLUME_SPIKE_%"]
-        ],
-        use_container_width=True
-    )
+    display_cols = [c for c in display_cols if c in df.columns]
 
-    st.dataframe(df[display_columns].reset_index(drop=True))
+    st.dataframe(df[display_cols], use_container_width=True)
 
 
 if __name__ == "__main__":
