@@ -145,7 +145,7 @@ def main() -> None:
 
     df_analytics = df.copy()
 
-    df_analytics["DATE1"] = pd.to_datetime(df_analytics["DATE1"], errors="coerce")
+    df_analytics["DATE1"] = pd.to_datetime(df_analytics["DATE1"], errors="coerce").dt.date
     df_analytics = df_analytics[df_analytics["DATE1"].notna()]
 
     latest_date = df_analytics["DATE1"].max()
