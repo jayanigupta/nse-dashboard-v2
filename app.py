@@ -128,6 +128,30 @@ def get_data() -> tuple[pd.DataFrame, dict]:
         "No bhavcopy data file is available. Please run the download script or place a CSV file in the workspace."
     )
 
+def compute_avg_volume():
+    files = sorted(Path("data").glob("sec_bhavdata_full_*.csv"))
+
+    all_dfs = []
+
+    for file in files:
+        df = pd.read_csv(file)
+        df.columns = df.columns.str.strip()
+
+        if "SYMBOL" in df.columns and "TTL_TRD_QNTY" in df.columns:
+            df["TTL_TRD_QNTY"] = pd.to_numeric(df["TTL_TRD_QNTY"], errors="coerce")
+            all_dfs.append(df[["SYMBOL", "TTL_TRD_QNTY"]])
+
+    if not all_dfs:
+        return pd.DataFrame(columns=["SYMBOL", "AVG_30D_VOLUME"])
+
+    history = pd.concat(all_dfs, ignore_index=True)
+
+    return (
+        history.groupby("SYMBOL")["TTL_TRD_QNTY"]
+        .mean()
+        .reset_index()
+        .rename(columns={"TTL_TRD_QNTY": "AVG_30D_VOLUME"})
+    )
 
 def main() -> None:
     st.title("NSE Delivery Dashboard")
@@ -141,6 +165,53 @@ def main() -> None:
         st.rerun()
 
     df, source_info = get_data()
+
+    avg_df = compute_avg_volume()
+
+    df = df.merge(avg_df, on="SYMBOL", how="left")
+
+    df["VOL_RATIO"] = (
+         df["TTL_TRD_QNTY"] / df["AVG_30D_VOLUME"]
+    ).round(2)
+
+
+    df_analytics = df.copy()
+
+    df_analytics["DATE1"] = pd.to_datetime(df_analytics["DATE1"], errors="coerce").dt.date
+    df_analytics = df_analytics[df_analytics["DATE1"].notna()]
+
+    latest_date = df_analytics["DATE1"].max()
+
+    start_30d = latest_date - pd.Timedelta(days=30)
+
+    df_30d = df_analytics[df_analytics["DATE1"] >= start_30d]
+    today_df = df_analytics[df_analytics["DATE1"] == latest_date]
+
+    avg_30d = (
+        df_30d.groupby("SYMBOL")["TTL_TRD_QNTY"]
+        .mean()
+        .reset_index()
+        .rename(columns={"TTL_TRD_QNTY": "AVG_30D_VOLUME"})
+    )
+
+    today_vol = (
+        today_df.groupby("SYMBOL")["TTL_TRD_QNTY"]
+        .sum()
+        .reset_index()
+        .rename(columns={"TTL_TRD_QNTY": "TODAY_VOLUME"})
+    )
+
+    merged = pd.merge(avg_30d, today_vol, on="SYMBOL", how="inner")
+
+    merged["VOLUME_SPIKE_%"] = (
+        (merged["TODAY_VOLUME"] - merged["AVG_30D_VOLUME"]) /
+        merged["AVG_30D_VOLUME"]
+    ) * 100
+
+    top_10_spikes = merged.sort_values(
+        "VOLUME_SPIKE_%",
+        ascending=False
+    ).head(10)
     
 
     st.write(df.columns.tolist())
@@ -213,6 +284,14 @@ def main() -> None:
         ]
         if col in df.columns
     ]
+    st.subheader("🔥 Top 10 Volume Spike Stocks (vs 30D Avg)")
+
+    st.dataframe(
+        top_10_spikes[
+            ["SYMBOL", "TODAY_VOLUME", "AVG_30D_VOLUME", "VOLUME_SPIKE_%"]
+        ],
+        use_container_width=True
+    )
 
     st.dataframe(df[display_columns].reset_index(drop=True))
 
