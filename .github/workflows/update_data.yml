@@ -13,7 +13,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
       with:
-      ref: main  # ← Added this to explicitly checkout the main branch
+        ref: main  # ← Added this to explicitly checkout the main branch
 
     - name: Setup Python
       uses: actions/setup-python@v5
