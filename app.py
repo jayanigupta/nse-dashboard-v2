@@ -252,6 +252,14 @@ def main() -> None:
         ]
         if col in df.columns
     ]
+    st.subheader("🔥 Top 10 Volume Spike Stocks (vs 30D Avg)")
+
+    st.dataframe(
+        top_10_spikes[
+            ["SYMBOL", "TODAY_VOLUME", "AVG_30D_VOLUME", "VOLUME_SPIKE_%"]
+        ],
+        use_container_width=True
+    )
 
     st.dataframe(df[display_columns].reset_index(drop=True))
 
