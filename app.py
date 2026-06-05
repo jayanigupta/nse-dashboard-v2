@@ -51,7 +51,7 @@ def is_file_stale(path: Path) -> bool:
 @st.cache_data
 def load_data(path: str, mtime: float) -> pd.DataFrame:
     df = pd.read_csv(path)
-    df.columns = df.columns.str.strip().str.upper()
+    df.columns = df.columns.str.strip()
 
     if "DATE1" in df.columns:
         df["DATE1"] = pd.to_datetime(df["DATE1"], errors="coerce", dayfirst=True)
@@ -112,21 +112,21 @@ def main():
 
     df, source_info = get_data()
 
-    # -----------------------------
-    # FIX: ensure required columns exist
-    # -----------------------------
-    if "TTL_TRD_QNTY" not in df.columns:
-        st.error("TTL_TRD_QNTY column missing in dataset")
-        return
+    # ---------------- FIX: safe VOL_RATIO ----------------
+    if "AVG_30D_VOLUME" in df.columns and "TTL_TRD_QNTY" in df.columns:
+        df["VOL_RATIO"] = (
+            df["TTL_TRD_QNTY"] / df["AVG_30D_VOLUME"].replace(0, None)
+        ).round(2)
+    else:
+        df["VOL_RATIO"] = None
 
-    # -----------------------------
-    # 30D rolling average (LIVE)
-    # -----------------------------
+    # ---------------- 30D spike logic ----------------
     df_analytics = df.copy()
 
-    if "DATE1" in df_analytics.columns:
-        df_analytics = df_analytics[df_analytics["DATE1"].notna()]
+    df_analytics["DATE1"] = pd.to_datetime(df_analytics["DATE1"], errors="coerce")
+    df_analytics = df_analytics[df_analytics["DATE1"].notna()]
 
+    if not df_analytics.empty:
         latest_date = df_analytics["DATE1"].max()
         start_30d = latest_date - pd.Timedelta(days=30)
 
@@ -159,22 +159,11 @@ def main():
             ascending=False
         ).head(10)
     else:
-        merged = pd.DataFrame()
         top_10_spikes = pd.DataFrame()
 
-    # -----------------------------
-    # VOL RATIO (safe)
-    # -----------------------------
-    df["VOL_RATIO"] = None
-    if "AVG_30D_VOLUME" in df.columns:
-        df["VOL_RATIO"] = (
-            df["TTL_TRD_QNTY"] / df["AVG_30D_VOLUME"]
-        ).replace([float("inf"), -float("inf")], None)
-
-    # -----------------------------
-    # UI
-    # -----------------------------
+    # ---------------- UI ----------------
     st.subheader("🔥 Top 10 Volume Spike Stocks")
+
     if not top_10_spikes.empty:
         st.dataframe(
             top_10_spikes[
@@ -183,21 +172,22 @@ def main():
             use_container_width=True
         )
 
-    st.subheader("📊 Full Table")
-
-    display_cols = [
-        "DATE1",
-        "SYMBOL",
-        "DELIV_PER",
-        "TTL_TRD_QNTY",
-        "VOL_RATIO",
-        "OPEN_PRICE",
-        "CLOSE_PRICE",
+    display_columns = [
+        col
+        for col in [
+            "DATE1",
+            "SYMBOL",
+            "DELIV_PER",
+            "TTL_TRD_QNTY",
+            "AVG_30D_VOLUME",
+            "VOL_RATIO",
+            "OPEN_PRICE",
+            "CLOSE_PRICE",
+        ]
+        if col in df.columns
     ]
 
-    display_cols = [c for c in display_cols if c in df.columns]
-
-    st.dataframe(df[display_cols], use_container_width=True)
+    st.dataframe(df[display_columns].reset_index(drop=True))
 
 
 if __name__ == "__main__":
