@@ -159,6 +159,12 @@ def main() -> None:
 
     search = st.text_input("Search Stock symbol")
 
+    timeframe = st.radio(
+        "Timeframe",
+        ["1D", "1W", "1M", "3M"],
+        horizontal=True
+)
+
     index_filter = st.selectbox(
         "Index Filter",
         ["All Stocks", "NIFTY 500"]
