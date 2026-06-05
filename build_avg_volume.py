@@ -1,9 +1,8 @@
-import pandas as pd
 from pathlib import Path
+import pandas as pd
 
 DATA_DIR = Path("data")
 
-# get all daily bhavcopy files
 files = sorted(DATA_DIR.glob("sec_bhavdata_full_*.csv"))
 
 all_dfs = []
@@ -11,36 +10,57 @@ all_dfs = []
 for file in files:
     try:
         df = pd.read_csv(file)
+
         df.columns = df.columns.str.strip()
 
-        # keep only required column
-        if "SYMBOL" in df.columns and "TTL_TRD_QNTY" in df.columns:
+        if "SYMBOL" not in df.columns:
+            continue
 
-            df["TTL_TRD_QNTY"] = pd.to_numeric(df["TTL_TRD_QNTY"], errors="coerce")
+        if "TTL_TRD_QNTY" not in df.columns:
+            continue
 
-            all_dfs.append(df[["SYMBOL", "TTL_TRD_QNTY"]])
+        df["TTL_TRD_QNTY"] = pd.to_numeric(
+            df["TTL_TRD_QNTY"],
+            errors="coerce"
+        )
 
-        print(f"Processed: {file.name}")
+        all_dfs.append(
+            df[["SYMBOL", "TTL_TRD_QNTY"]]
+        )
+
+        print("Processed:", file.name)
 
     except Exception as e:
-        print(f"Skipped: {file.name} -> {e}")
+        print("Skipped:", file.name, e)
 
-# combine all days into one dataset
-if all_dfs:
-    history = pd.concat(all_dfs, ignore_index=True)
-else:
-    history = pd.DataFrame(columns=["SYMBOL", "TTL_TRD_QNTY"])
+if not all_dfs:
+    raise ValueError("No valid bhavcopy files found.")
 
-# compute average volume across ALL files in folder
-avg_volume = (
-    history.groupby("SYMBOL")["TTL_TRD_QNTY"]
-    .mean()
-    .reset_index()
-    .rename(columns={"TTL_TRD_QNTY": "AVG_30D_VOLUME"})
+history = pd.concat(
+    all_dfs,
+    ignore_index=True
 )
 
-# overwrite old file
-avg_volume.to_csv("avg_volume.csv", index=False)
+avg_volume = (
+    history
+    .groupby("SYMBOL")["TTL_TRD_QNTY"]
+    .mean()
+    .reset_index()
+)
 
-print("✅ avg_volume.csv updated successfully")
-print("Stocks processed:", len(avg_volume))
+avg_volume.rename(
+    columns={
+        "TTL_TRD_QNTY": "AVG_30D_VOLUME"
+    },
+    inplace=True
+)
+
+avg_volume.to_csv(
+    "avg_volume.csv",
+    index=False
+)
+
+print(
+    f"Created avg_volume.csv for {len(avg_volume)} symbols "
+    f"using {len(files)} files."
+)
