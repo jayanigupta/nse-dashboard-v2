@@ -61,22 +61,7 @@ def load_dataframe(path: str, mtime: float) -> pd.DataFrame:
     if "TTL_TRD_QNTY" in df.columns:
         df["TTL_TRD_QNTY"] = pd.to_numeric(df["TTL_TRD_QNTY"], errors="coerce")
 
-    try:
-        avg_volume = pd.read_csv("avg_volume.csv")
 
-        df = df.merge(
-            avg_volume,
-            on="SYMBOL",
-            how="left"
-        )
-
-        df["VOL_RATIO"] = (
-            df["TTL_TRD_QNTY"] /
-            df["AVG_30D_VOLUME"]
-        ).round(2)
-
-    except Exception as e:
-        st.error(f"Could not load avg_volume.csv: {e}")
     if "DELIV_PER" in df.columns:
         df = df[df["DELIV_PER"].notna()]
 
@@ -140,8 +125,36 @@ def main() -> None:
             LOCAL_FILE.unlink()
         st.rerun()
 
+
+    timeframe = st.radio(
+        "Average Volume Period",
+        ["1D", "1W", "1M", "3M"],
+        horizontal=True
+    )
+
     df, source_info = get_data()
     
+    file_map = {
+        "1D": "avg_volume_1d.csv",
+        "1W": "avg_volume_1w.csv",
+        "1M": "avg_volume_1m.csv",
+        "3M": "avg_volume_3m.csv",
+        }
+
+    avg_volume = pd.read_csv(
+        file_map[timeframe]
+    )
+
+    df = df.merge(
+        avg_volume,
+        on="SYMBOL",
+        how="left"
+    )
+
+    df["VOL_RATIO"] = (
+        df["TTL_TRD_QNTY"] /
+        df["AVG_30D_VOLUME"]
+    ).round(2)
 
     st.write(df.columns.tolist())
     if source_info["status"] == "downloaded":
@@ -157,11 +170,6 @@ def main() -> None:
         f"**Data source:** `{source_info['source_path']}`"
     )
 
-    timeframe = st.radio(
-        "Average Volume Period",
-        ["1D", "1W", "1M", "3M"],
-        horizontal=True
-)
 
     search = st.text_input("Search Stock symbol")
 
