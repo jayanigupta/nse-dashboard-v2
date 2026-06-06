@@ -213,6 +213,14 @@ def main() -> None:
     if sort_by in df.columns:
         df = df.sort_values(sort_by, ascending=ascending)
 
+    display_df = df.copy()
+
+    display_df = display_df.rename(
+        columns={
+            "AVG_30D_VOLUME": f"AVG_{timeframe}_VOLUME"
+        }
+    )
+
     display_columns = [
         col
         for col in [
@@ -220,16 +228,18 @@ def main() -> None:
             "SYMBOL",
             "DELIV_PER",
             "TTL_TRD_QNTY",
-            "AVG_30D_VOLUME",
+            f"AVG_{timeframe}_VOLUME",
             "VOL_RATIO",
             "OPEN_PRICE",
             "CLOSE_PRICE",
         ]
-        if col in df.columns
+        if col in display_df.columns
     ]
 
-    st.dataframe(df[display_columns].reset_index(drop=True))
+    st.dataframe(
+        display_df[display_columns].reset_index(drop=True)
+    )
 
 
-if __name__ == "__main__":
-    main()
+    if __name__ == "__main__":
+        main()
