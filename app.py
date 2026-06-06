@@ -144,6 +144,7 @@ def main() -> None:
     avg_volume = pd.read_csv(
         file_map[timeframe]
     )
+    st.write(file_map[timeframe])
 
     df = df.merge(
         avg_volume,
