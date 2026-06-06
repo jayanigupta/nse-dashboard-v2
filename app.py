@@ -152,6 +152,9 @@ def main() -> None:
         how="left"
     )
 
+    if timeframe == "1D":
+        df["AVG_30D_VOLUME"] = df["TTL_TRD_QNTY"]
+
     df["VOL_RATIO"] = (
         df["TTL_TRD_QNTY"] /
         df["AVG_30D_VOLUME"]
