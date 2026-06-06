@@ -239,6 +239,5 @@ def main() -> None:
     st.dataframe(
         display_df[display_columns].reset_index(drop=True)
     )
-
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()
