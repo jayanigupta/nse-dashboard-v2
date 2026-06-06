@@ -240,6 +240,5 @@ def main() -> None:
         display_df[display_columns].reset_index(drop=True)
     )
 
-
     if __name__ == "__main__":
         main()
