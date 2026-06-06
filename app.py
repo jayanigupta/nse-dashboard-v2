@@ -62,16 +62,7 @@ def load_dataframe(path: str, mtime: float) -> pd.DataFrame:
         df["TTL_TRD_QNTY"] = pd.to_numeric(df["TTL_TRD_QNTY"], errors="coerce")
 
     try:
-        file_map = {
-            "1D": "avg_volume_1d.csv",
-            "1W": "avg_volume_1w.csv",
-            "1M": "avg_volume_1m.csv",
-            "3M": "avg_volume_3m.csv",
-        }
-
-        avg_volume = pd.read_csv(
-            file_map[timeframe]
-        )
+        avg_volume = pd.read_csv("avg_volume.csv")
 
         df = df.merge(
             avg_volume,
