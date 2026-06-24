@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 import yfinance as yf
 import plotly.graph_objects as go
@@ -7,10 +8,21 @@ st.set_page_config(page_title="Stock Chart", page_icon="📈", layout="wide")
 st.title("📈 Stock Chart Viewer")
 st.caption("View candlestick charts for any NSE stock")
 
+# Load symbols
+try:
+    nifty500 = pd.read_csv("nifty500.csv")
+    all_symbols = sorted(nifty500["Symbol"].astype(str).str.strip().tolist())
+except:
+    all_symbols = []
+
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    symbol = st.text_input("Enter Stock Symbol (e.g. RELIANCE, TCS, INFY)", value="RELIANCE")
+    symbol = st.selectbox(
+        "🔍 Search Stock Symbol",
+        options=[""] + all_symbols,
+        index=0
+    )
 with col2:
     period = st.radio("Period", ["1mo", "3mo", "6mo", "1y"], horizontal=True)
 
