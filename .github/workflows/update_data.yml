@@ -1,0 +1,47 @@
+name: Update NSE Data
+
+on:
+  schedule:
+    - cron: '30 13 * * 1-5'   # 7:00 PM IST Mon-Fri
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        ref: main  # ← Added this to explicitly checkout the main branch
+
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        pip install pandas requests
+
+    - name: Run downloader
+      run: |
+        python download.py
+
+    - name: Update historical data and avg volume
+      run: |
+        python download_history.py
+
+    - name: Commit updated CSV
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+
+        git add .
+
+        git commit -m "Daily NSE update" || echo "No changes"
+
+        git push
