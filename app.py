@@ -178,7 +178,12 @@ def main() -> None:
     # ── Filters ────────────────────────────────────────────────
     col_a, col_b, col_c = st.columns(3)
     with col_a:
-        search = st.text_input("🔍 Search Symbol")
+        all_symbols = df["SYMBOL"].dropna().unique().tolist()
+        search = st.selectbox(
+            "🔍 Search Symbol",
+            options=[""] + sorted(all_symbols),
+            index=0
+        )
     with col_b:
         index_filter = st.selectbox("Index Filter", ["All Stocks", "NIFTY 500"])
     with col_c:
@@ -192,7 +197,7 @@ def main() -> None:
 
     # ── Apply filters ──────────────────────────────────────────
     if search:
-        df = df[df["SYMBOL"].str.contains(search.upper(), na=False)]
+        df = df[df["SYMBOL"] == search]
 
     if index_filter == "NIFTY 500":
         nifty500 = pd.read_csv("nifty500.csv")
