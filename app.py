@@ -122,12 +122,6 @@ def main() -> None:
         page_icon="📈",
         layout="wide"
     )
-    
-    st.markdown(
-        '<meta name="google-site-verification" content="MukO9SuxySRVLRS6Qx7UpHuwXOgnrw9uRvdZJiFFyAY" />',
-        unsafe_allow_html=True
-    
-    )
 
     st.title("📈 NSE Delivery Dashboard")
     st.caption("Live NSE bhavcopy data — updates daily automatically")
@@ -253,6 +247,31 @@ def main() -> None:
 
     st.dataframe(styled, use_container_width=True)
 
+
+    # ── Export buttons ─────────────────────────────────────────
+    col_exp1, col_exp2 = st.columns(2)
+    
+    with col_exp1:
+        st.download_button(
+            label="📥 Download as CSV",
+            data=display_df.to_csv(index=False),
+            file_name=f"nse_data_{source_info['source_date']}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
+    
+    with col_exp2:
+        import io
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+            display_df.to_excel(writer, index=False, sheet_name="NSE Data")
+        st.download_button(
+            label="📊 Download as Excel",
+            data=buffer.getvalue(),
+            file_name=f"nse_data_{source_info['source_date']}.xlsx",
+            mime="application/vnd.ms-excel",
+            use_container_width=True
+        )
 
     st.caption(f"Showing {len(display_df)} stocks · Source: `{source_info['source_path']}`")
 
