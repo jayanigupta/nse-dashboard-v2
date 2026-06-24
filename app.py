@@ -122,11 +122,11 @@ def main() -> None:
         page_icon="📈",
         layout="wide"
     )
-
+    
     st.markdown(
-        '<meta name="google-site-verification" content="<meta name="google-site-verification" content="MukO9SuxySRVLRS6Qx7UpHuwXOgnrw9uRvdZJiFFyAY" />" />',
+        '<meta name="google-site-verification" content="MukO9SuxySRVLRS6Qx7UpHuwXOgnrw9uRvdZJiFFyAY" />',
         unsafe_allow_html=True
-
+    
     )
 
     st.title("📈 NSE Delivery Dashboard")
