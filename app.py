@@ -1,5 +1,7 @@
 import datetime
 from pathlib import Path
+import yfinance as yf
+import plotly.graph_objects as go
 
 import pandas as pd
 import requests
@@ -239,6 +241,8 @@ def main() -> None:
         styled = styled.map(color_ratio, subset=["VOL_RATIO"])
 
     st.dataframe(styled, use_container_width=True)
+
+
     st.caption(f"Showing {len(display_df)} stocks · Source: `{source_info['source_path']}`")
 
 
