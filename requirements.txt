@@ -1,6 +1,6 @@
 streamlit
 pandas
 groq
-openpyxly
-finance
+openpyxl
+yfinance
 plotly
