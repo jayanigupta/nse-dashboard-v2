@@ -3,4 +3,4 @@ pandas
 groq
 openpyxl
 yfinance
-plotly
+plotlynse
