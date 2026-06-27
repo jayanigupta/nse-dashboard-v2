@@ -37,7 +37,7 @@ if st.button("🔄 Refresh"):
 if symbol:
     with st.spinner(f"Fetching announcements for {symbol}..."):
         try:
-            nse = NSE()
+            nse = NSE("/tmp")
             to_date = datetime.date.today()
             from_date = to_date - datetime.timedelta(days=days)
             data = nse.announcements(
