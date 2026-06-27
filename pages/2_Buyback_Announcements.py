@@ -64,4 +64,25 @@ else:
             lambda x: "✅ Yes" if x in nifty500_symbols else "❌ No"
         )
 
-    st.dataframe(df, use_container_width=True)
+    # Keep only useful columns
+    useful_cols = [c for c in [
+        "symbol", "companyName", "subject", 
+        "bm_desc", "attchmntText", "sort_date"
+    ] if c in df.columns]
+    
+    df = df[useful_cols].rename(columns={
+        "symbol": "Symbol",
+        "companyName": "Company",
+        "subject": "Subject",
+        "bm_desc": "Details",
+        "attchmntText": "Announcement",
+        "sort_date": "Date"
+    })
+
+    # Show as clean table with text wrapping
+    for _, row in df.iterrows():
+        with st.expander(f"📢 {row.get('Symbol', '')} — {row.get('Subject', row.get('Announcement', '')[:60])}"):
+            for col, val in row.items():
+                if val and str(val).strip():
+                    st.markdown(f"**{col}:** {val}")
+        st.divider()
