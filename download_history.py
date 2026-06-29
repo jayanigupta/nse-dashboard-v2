@@ -19,7 +19,7 @@ for i in range(45):
     filename = f"sec_bhavdata_full_{date.strftime('%d%m%Y')}.csv"
     file_path = DATA_DIR / filename
 
-    # ✅ SKIP if already exists
+#skip wala part
     if file_path.exists():
         continue
 
