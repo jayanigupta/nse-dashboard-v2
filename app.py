@@ -7,6 +7,9 @@ import pandas as pd
 import requests
 import streamlit as st
 
+from theme import apply_finance_theme
+apply_finance_theme()
+
 DATA_DIR = Path(".")
 LOCAL_FILE = DATA_DIR / "sec_bhavdata_latest.csv"
 FALLBACK_FILE = DATA_DIR / "sec_bhavdata_full_02062026.csv"
