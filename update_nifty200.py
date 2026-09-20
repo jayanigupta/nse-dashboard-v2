@@ -4,7 +4,7 @@ from io import StringIO
 
 url = "https://nsearchives.nseindia.com/content/indices/ind_nifty200list.csv"
 
-headers = {
+headers = { 
     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/120 Safari/537.36",
     "Accept": "text/csv,text/plain,*/*",
     "Referer": "https://www.niftyindices.com/"
