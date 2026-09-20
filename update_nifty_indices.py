@@ -1,106 +1,134 @@
 import requests
 import pandas as pd
-import time
-
-URL = "https://www.nseindia.com/api/equity-stockIndices"
+from io import StringIO
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/153.0.0.0 Safari/537.36",
-    "Accept": "application/json,text/plain,*/*",
-    "Accept-Language": "en-US,en;q=0.9",
+    "User-Agent": "Mozilla/5.0",
+    "Accept": "*/*",
     "Referer": "https://www.nseindia.com/"
 }
 
-# These are the indexes we want in the NEW file.
-# Nifty 200 and Nifty 500 are deliberately NOT included.
-INDEXES = {
-    "Nifty 50": "NIFTY 50",
-    "Nifty 100": "NIFTY 100",
-    "Nifty Total Market": "NIFTY TOTAL MARKET",
-    "Nifty Midcap 150": "NIFTY MIDCAP 150",
-    "Nifty Midcap 100": "NIFTY MIDCAP 100",
-    "Nifty Smallcap 250": "NIFTY SMALLCAP 250",
-    "Nifty Smallcap 500": "NIFTY SMALLCAP 500"
+# Official NSE constituent CSVs
+INDEX_URLS = {
+    "Nifty 50":
+        "https://nsearchives.nseindia.com/content/indices/ind_nifty50list.csv",
+
+    "Nifty 100":
+        "https://nsearchives.nseindia.com/content/indices/ind_nifty100list.csv",
+
+    "Nifty Total Market":
+        "https://nsearchives.nseindia.com/content/indices/ind_niftytotalmarketlist.csv",
+
+    "Nifty Midcap 150":
+        "https://nsearchives.nseindia.com/content/indices/ind_niftymidcap150list.csv",
+
+    "Nifty Midcap 100":
+        "https://nsearchives.nseindia.com/content/indices/ind_niftymidcap100list.csv",
+
+    "Nifty Smallcap 250":
+        "https://nsearchives.nseindia.com/content/indices/ind_niftysmallcap250list.csv",
+
+    "Nifty Smallcap 500":
+        "https://nsearchives.nseindia.com/content/indices/ind_niftysmallcap500list.csv"
 }
+
 
 session = requests.Session()
 session.headers.update(HEADERS)
 
-# Open NSE first so the API request gets the required cookies
+# Open NSE first for cookies
 session.get("https://www.nseindia.com/", timeout=20)
 
 all_stocks = {}
 
-for index_name, nse_index_name in INDEXES.items():
+
+for index_name, url in INDEX_URLS.items():
 
     print(f"Downloading {index_name}...")
 
     try:
-        response = session.get(
-            URL,
-            params={"index": nse_index_name},
-            timeout=30
+        response = session.get(url, timeout=30)
+        response.raise_for_status()
+
+        df = pd.read_csv(StringIO(response.text))
+
+        # Find symbol column
+        symbol_col = next(
+            (col for col in df.columns
+             if col.strip().lower() in ["symbol", "symbol "]),
+            None
         )
 
-        response.raise_for_status()
-        data = response.json()
+        company_col = next(
+            (col for col in df.columns
+             if "company" in col.lower()),
+            None
+        )
 
-        stocks = data.get("data", [])
-
-        if not stocks:
-            print(f"WARNING: No stocks found for {index_name}")
+        if symbol_col is None:
+            print(f"ERROR: Could not find Symbol column for {index_name}")
+            print(df.columns.tolist())
             continue
 
-        for stock in stocks:
+        for _, row in df.iterrows():
 
-            symbol = stock.get("symbol")
+            symbol = str(row[symbol_col]).strip()
 
-            # Ignore the index itself if NSE returns it
-            if not symbol or symbol == nse_index_name:
+            if not symbol or symbol == "nan":
                 continue
+
+            company_name = ""
+
+            if company_col:
+                company_name = str(row[company_col]).strip()
 
             if symbol not in all_stocks:
                 all_stocks[symbol] = {
                     "Symbol": symbol,
-                    "Company Name": stock.get("meta", {}).get(
-                        "companyName", ""
-                    )
+                    "Company Name": company_name
                 }
 
             all_stocks[symbol][index_name] = "Yes"
 
-        print(f"  Found {len(stocks)} stocks")
-
-        time.sleep(1)
+        print(f"  Found {len(df)} stocks")
 
     except Exception as e:
         print(f"ERROR downloading {index_name}: {e}")
 
 
-# Convert to DataFrame
-df = pd.DataFrame(all_stocks.values())
+# Stop if nothing downloaded
+if not all_stocks:
+    raise RuntimeError(
+        "No index data was downloaded. "
+        "Check the NSE URLs or connection."
+    )
 
-# Make sure every index column exists
-for index_name in INDEXES:
-    if index_name not in df.columns:
-        df[index_name] = "No"
 
-# Fill missing memberships
-for index_name in INDEXES:
-    df[index_name] = df[index_name].fillna("No")
+# Create dataframe
+result = pd.DataFrame(all_stocks.values())
 
-# Sort alphabetically by symbol
-df = df.sort_values("Symbol")
 
-# Save the NEW file
-df.to_csv("nifty_indices.csv", index=False)
+# Add missing index columns
+for index_name in INDEX_URLS:
+    if index_name not in result.columns:
+        result[index_name] = "No"
+
+
+# Replace missing values
+for index_name in INDEX_URLS:
+    result[index_name] = result[index_name].fillna("No")
+
+
+# Sort
+result = result.sort_values("Symbol")
+
+
+# Save
+result.to_csv("nifty_indices.csv", index=False)
+
 
 print()
-print("====================================")
+print("======================================")
 print("Created nifty_indices.csv")
-print(f"Total unique stocks: {len(df)}")
-print("====================================")
-print()
-print(df.head())
+print(f"Total unique stocks: {len(result)}")
+print("======================================")
