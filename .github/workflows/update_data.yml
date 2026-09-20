@@ -39,6 +39,14 @@ jobs:
       run: |
         python update_nifty200.py
 
+    - name: Check Nifty 200
+      run: |
+        pwd
+        ls -la
+        ls -lh nifty200.csv
+        wc -l nifty200.csv
+        head -5 nifty200.csv
+
     - name: Update NIFTY 500 list
       run: |
         python update_nifty500.py
