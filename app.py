@@ -213,6 +213,7 @@ def main() -> None:
         order = st.radio("Sort order", ["Descending", "Ascending"], horizontal=True)
 
     # ── Apply filters ──────────────────────────────────────────
+    
     if search:
         df = df[df["SYMBOL"] == search]
 
@@ -229,14 +230,24 @@ def main() -> None:
     elif index_filter != "All Stocks":
         nifty_indices = pd.read_csv("nifty_indices.csv")
 
-        symbols = nifty_indices.loc[
-            nifty_indices[index_filter] == "Yes",
-            "Symbol"
-        ].astype(str).str.strip().tolist()
+        # Match the dropdown name to the CSV column name
+        index_column = next(
+            (
+                col for col in nifty_indices.columns
+                if col.strip().lower() == index_filter.strip().lower()
+            ),
+            None
+        )
+
+        if index_column is not None:
+            symbols = nifty_indices.loc[
+                nifty_indices[index_column].astype(str).str.strip().str.lower() == "yes",
+                "Symbol"
+            ].astype(str).str.strip().tolist()
 
         df = df[df["SYMBOL"].isin(symbols)]
 
-    df = df[df["DELIV_PER"] >= min_delivery]
+        df = df[df["DELIV_PER"] >= min_delivery]
 
     ascending = order == "Ascending"
     if sort_by in df.columns:
