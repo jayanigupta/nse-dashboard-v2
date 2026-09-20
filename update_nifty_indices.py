@@ -1,271 +1,260 @@
 import requests
 import pandas as pd
-from io import StringIO
+
+BASE_URL = "https://www.niftyindices.com/IndexConstituent/"
 
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/153.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0",
     "Accept": "*/*",
     "Referer": "https://www.niftyindices.com/"
 }
 
-# Official NSE/Nifty Indices constituent files
-URLS = {
-    "Nifty 50":
-        "https://nsearchives.nseindia.com/content/indices/ind_nifty50list.csv",
-
-    "Nifty 100":
-        "https://nsearchives.nseindia.com/content/indices/ind_nifty100list.csv",
-
-    "Nifty Midcap 150":
-        "https://nsearchives.nseindia.com/content/indices/ind_niftymidcap150list.csv",
-
-    "Nifty Midcap 100":
-        "https://nsearchives.nseindia.com/content/indices/ind_niftymidcap100list.csv",
-
-    "Nifty Smallcap 250":
-        "https://nsearchives.nseindia.com/content/indices/ind_niftysmallcap250list.csv",
-
-    "Nifty Smallcap 500":
-        "https://nsearchives.nseindia.com/content/indices/ind_niftysmallcap500list.csv",
-
-    "Nifty Microcap 250":
-        "https://nsearchives.nseindia.com/content/indices/ind_niftymicrocap250list.csv",
+# Official Nifty Indices constituent files
+INDEX_FILES = {
+    "Nifty 50": "ind_nifty50list.csv",
+    "Nifty 100": "ind_nifty100list.csv",
+    "Nifty Midcap 150": "ind_niftymidcap150list.csv",
+    "Nifty Midcap 100": "ind_niftymidcap100list.csv",
+    "Nifty Smallcap 250": "ind_niftysmallcap250list.csv",
+    "Nifty Smallcap 500": "ind_NiftySmallcap500_list.csv",
+    "Nifty Microcap 250": "ind_niftymicrocap250_list.csv",
 }
 
 
-session = requests.Session()
-session.headers.update(HEADERS)
-
-# Open NSE first
-session.get("https://www.nseindia.com/", timeout=30)
-
-
-def download_index(index_name, url):
+def download_index(index_name, filename):
+    url = BASE_URL + filename
 
     print(f"Downloading {index_name}...")
 
-    response = session.get(url, timeout=30)
+    response = requests.get(
+        url,
+        headers=HEADERS,
+        timeout=30
+    )
+
     response.raise_for_status()
 
-    df = pd.read_csv(StringIO(response.text))
+    df = pd.read_csv(
+        pd.io.common.BytesIO(response.content)
+    )
 
+    # Clean column names
+    df.columns = [
+        str(col).strip()
+        for col in df.columns
+    ]
+
+    print(f"  Found {len(df)} stocks")
     print(f"  Columns: {df.columns.tolist()}")
-    print(f"  Rows: {len(df)}")
 
-    # Find symbol column
-    symbol_col = None
+    # Find Symbol column
+    symbol_col = next(
+        (
+            col for col in df.columns
+            if col.upper() == "SYMBOL"
+        ),
+        None
+    )
 
-    for col in df.columns:
-        if col.strip().upper() == "SYMBOL":
-            symbol_col = col
-            break
+    # Find company name column
+    company_col = next(
+        (
+            col for col in df.columns
+            if "COMPANY" in col.upper()
+        ),
+        None
+    )
 
     if symbol_col is None:
         raise ValueError(
-            f"Could not find SYMBOL column in {index_name}"
+            f"Could not find Symbol column for {index_name}"
         )
 
-    # Find company name column
-    company_col = None
+    result = pd.DataFrame()
 
-    for col in df.columns:
-        if "company" in col.lower():
-            company_col = col
-            break
-
-    output = pd.DataFrame()
-
-    output["Symbol"] = (
+    result["Symbol"] = (
         df[symbol_col]
         .astype(str)
         .str.strip()
     )
 
     if company_col:
-        output["Company Name"] = (
+        result["Company Name"] = (
             df[company_col]
             .astype(str)
             .str.strip()
         )
     else:
-        output["Company Name"] = ""
+        result["Company Name"] = ""
 
-    # Remove invalid rows
-    output = output[
-        (output["Symbol"] != "") &
-        (output["Symbol"].str.lower() != "nan")
+    result = result[
+        result["Symbol"].notna()
+        & (result["Symbol"] != "")
+        & (result["Symbol"].str.lower() != "nan")
     ]
 
-    return output
+    return result
 
 
-# ---------------------------------------------------------
-# Download all indexes
-# ---------------------------------------------------------
+# ============================================================
+# Download the 7 indexes we need
+# ============================================================
 
 index_data = {}
 
-for index_name, url in URLS.items():
+for index_name, filename in INDEX_FILES.items():
 
     try:
         index_data[index_name] = download_index(
             index_name,
-            url
+            filename
         )
 
     except Exception as e:
-
         print(
             f"ERROR downloading {index_name}: {e}"
         )
+        raise
 
 
-# ---------------------------------------------------------
-# Make sure required indexes downloaded
-# ---------------------------------------------------------
-
-required = [
-    "Nifty 50",
-    "Nifty 100",
-    "Nifty Midcap 150",
-    "Nifty Midcap 100",
-    "Nifty Smallcap 250",
-    "Nifty Smallcap 500",
-    "Nifty Microcap 250",
-]
-
-missing = [
-    name for name in required
-    if name not in index_data
-]
-
-if missing:
-
-    raise RuntimeError(
-        "These indexes failed to download: "
-        + ", ".join(missing)
-    )
-
-
-# ---------------------------------------------------------
-# Create master stock list
-# ---------------------------------------------------------
+# ============================================================
+# Build master list
+# ============================================================
 
 all_stocks = {}
 
+
 for index_name, data in index_data.items():
+
+    # Microcap is only needed to build Total Market
+    if index_name == "Nifty Microcap 250":
+        continue
 
     for _, row in data.iterrows():
 
         symbol = row["Symbol"]
-        company = row["Company Name"]
 
         if symbol not in all_stocks:
-
             all_stocks[symbol] = {
                 "Symbol": symbol,
-                "Company Name": company
+                "Company Name": row["Company Name"]
             }
 
         all_stocks[symbol][index_name] = "Yes"
 
 
-# ---------------------------------------------------------
+# ============================================================
 # Nifty Total Market
 #
 # Official definition:
 # Nifty 500 + Nifty Microcap 250
-# ---------------------------------------------------------
+# ============================================================
 
-nifty500_url = (
-    "https://nsearchives.nseindia.com/content/indices/"
-    "ind_nifty500list.csv"
-)
+print()
+print("Building Nifty Total Market...")
 
-nifty500 = download_index(
-    "Nifty 500",
-    nifty500_url
-)
 
-nifty_total_symbols = set(
+# IMPORTANT:
+# Use your existing nifty500.csv.
+# We do NOT modify it.
+
+nifty500 = pd.read_csv("nifty500.csv")
+
+nifty500.columns = [
+    str(col).strip()
+    for col in nifty500.columns
+]
+
+nifty500_symbols = set(
     nifty500["Symbol"]
-).union(
-    set(index_data["Nifty Microcap 250"]["Symbol"])
+    .astype(str)
+    .str.strip()
 )
 
 
-for symbol in nifty_total_symbols:
+microcap = index_data["Nifty Microcap 250"]
+
+microcap_symbols = set(
+    microcap["Symbol"]
+    .astype(str)
+    .str.strip()
+)
+
+total_market_symbols = (
+    nifty500_symbols
+    | microcap_symbols
+)
+
+
+for symbol in total_market_symbols:
 
     if symbol not in all_stocks:
 
-        # Find company name from Microcap 250
-        company = ""
-
-        micro = index_data["Nifty Microcap 250"]
-
-        match = micro[
-            micro["Symbol"] == symbol
+        # Try to get company name from Microcap
+        match = microcap[
+            microcap["Symbol"] == symbol
         ]
 
         if not match.empty:
-            company = match.iloc[0]["Company Name"]
+            company_name = match.iloc[0]["Company Name"]
+        else:
+            company_name = ""
 
         all_stocks[symbol] = {
             "Symbol": symbol,
-            "Company Name": company
+            "Company Name": company_name
         }
 
     all_stocks[symbol]["Nifty Total Market"] = "Yes"
 
 
-# ---------------------------------------------------------
+# ============================================================
 # Create final dataframe
-# ---------------------------------------------------------
+# ============================================================
 
 result = pd.DataFrame(
     all_stocks.values()
 )
 
 
-# ---------------------------------------------------------
-# Add every required column
-# ---------------------------------------------------------
+# ============================================================
+# Make sure every requested index has a column
+# ============================================================
 
-columns = [
+FINAL_INDEXES = [
     "Nifty 50",
     "Nifty 100",
+    "Nifty Total Market",
     "Nifty Midcap 150",
     "Nifty Midcap 100",
     "Nifty Smallcap 250",
-    "Nifty Total Market",
-    "Nifty Smallcap 500"
+    "Nifty Smallcap 500",
 ]
 
-for column in columns:
 
-    if column not in result.columns:
-        result[column] = "No"
+for index_name in FINAL_INDEXES:
 
-    result[column] = (
-        result[column]
+    if index_name not in result.columns:
+        result[index_name] = "No"
+
+    result[index_name] = (
+        result[index_name]
         .fillna("No")
     )
 
 
-# ---------------------------------------------------------
+# ============================================================
 # Sort
-# ---------------------------------------------------------
+# ============================================================
 
 result = result.sort_values(
     "Symbol"
 ).reset_index(drop=True)
 
 
-# ---------------------------------------------------------
-# Keep only what the dashboard needs
-# ---------------------------------------------------------
+# ============================================================
+# Final column order
+# ============================================================
 
 result = result[
     [
@@ -273,18 +262,18 @@ result = result[
         "Company Name",
         "Nifty 50",
         "Nifty 100",
+        "Nifty Total Market",
         "Nifty Midcap 150",
         "Nifty Midcap 100",
         "Nifty Smallcap 250",
-        "Nifty Total Market",
-        "Nifty Smallcap 500"
+        "Nifty Smallcap 500",
     ]
 ]
 
 
-# ---------------------------------------------------------
+# ============================================================
 # Save
-# ---------------------------------------------------------
+# ============================================================
 
 result.to_csv(
     "nifty_indices.csv",
@@ -292,9 +281,9 @@ result.to_csv(
 )
 
 
-# ---------------------------------------------------------
+# ============================================================
 # Verification
-# ---------------------------------------------------------
+# ============================================================
 
 print()
 print("========================================")
@@ -302,19 +291,19 @@ print("Created nifty_indices.csv")
 print("========================================")
 
 print(
-    f"Total stocks: {len(result)}"
+    f"Total unique stocks: {len(result)}"
 )
 
-for column in columns:
+for index_name in FINAL_INDEXES:
 
     count = (
-        result[column]
+        result[index_name]
         .eq("Yes")
         .sum()
     )
 
     print(
-        f"{column}: {count}"
+        f"{index_name}: {count}"
     )
 
 print("========================================")
