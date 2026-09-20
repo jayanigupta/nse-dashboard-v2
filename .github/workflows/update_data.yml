@@ -35,6 +35,10 @@ jobs:
       run: |
         python download_history.py
 
+    - name: Update Nifty 200
+      run: |
+        python update_nifty200.py
+
     - name: Update NIFTY 500 list
       run: |
         python update_nifty500.py
