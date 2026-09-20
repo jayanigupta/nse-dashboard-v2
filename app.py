@@ -188,7 +188,21 @@ def main() -> None:
             index=0
         )
     with col_b:
-        index_filter = st.selectbox("Index Filter", ["All Stocks", "NIFTY 500"])
+        index_filter = st.selectbox(
+            "Index Filter",
+            [
+                "All Stocks",
+                "NIFTY 50",
+                "NIFTY 100",
+                "NIFTY 200",
+                "NIFTY 500",
+                "NIFTY Total Market",
+                "NIFTY Midcap 150",
+                "NIFTY Midcap 100",
+                "NIFTY Smallcap 250",
+                "NIFTY Smallcap 500"
+            ]
+        )
     with col_c:
         min_delivery = st.slider("Minimum Delivery %", 0, 100, 70)
 
@@ -202,9 +216,24 @@ def main() -> None:
     if search:
         df = df[df["SYMBOL"] == search]
 
-    if index_filter == "NIFTY 500":
+    if index_filter == "NIFTY 200":
+        nifty200 = pd.read_csv("nifty200.csv")
+        symbols = nifty200["Symbol"].astype(str).str.strip().tolist()
+        df = df[df["SYMBOL"].isin(symbols)]
+
+    elif index_filter == "NIFTY 500":
         nifty500 = pd.read_csv("nifty500.csv")
         symbols = nifty500["Symbol"].astype(str).str.strip().tolist()
+        df = df[df["SYMBOL"].isin(symbols)]
+
+    elif index_filter != "All Stocks":
+        nifty_indices = pd.read_csv("nifty_indices.csv")
+
+        symbols = nifty_indices.loc[
+            nifty_indices[index_filter] == "Yes",
+            "Symbol"
+        ].astype(str).str.strip().tolist()
+
         df = df[df["SYMBOL"].isin(symbols)]
 
     df = df[df["DELIV_PER"] >= min_delivery]
