@@ -35,6 +35,10 @@ jobs:
       run: |
         python download_history.py
 
+    - name: Update NIFTY 500 list
+      run: |
+        python update_nifty500.py
+
     - name: Commit updated CSV
       run: |
         git config --global user.name "github-actions"
