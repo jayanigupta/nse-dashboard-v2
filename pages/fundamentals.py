@@ -327,6 +327,48 @@ balance_sheet_metrics = [
     "Trade Payables"
 ]
 
+cash_flow_metrics = [
+    "Cash from Operating Activity",
+    "Cash from Investing Activity",
+    "Cash from Financing Activity",
+    "Net Cash Flow",
+    "Free Cash Flow"
+]
+
+ratios_metrics = [
+    "Price to Earning",
+    "Price to book value",
+    "Return on equity",
+    "Return on capital employed",
+    "Return on assets",
+    "Debt to equity",
+    "Dividend yield",
+    "Earnings yield",
+    "Inventory turnover ratio",
+    "Quick ratio",
+    "Asset Turnover Ratio",
+    "Financial leverage",
+    "Return on invested capital",
+    "Debtor days",
+    "Working Capital Days",
+    "Cash Conversion Cycle",
+    "Days Payable Outstanding",
+    "Days Receivable Outstanding",
+    "Days Inventory Outstanding",
+    "Piotroski score",
+    "G Factor"
+]
+
+price_metrics = [
+    "Current Market Price",
+    "Price to Earning",
+    "Price to book value",
+    "Dividend yield",
+    "Industry PE",
+    "Industry PBV",
+    "Earnings yield",
+    "Graham Number"
+]
 
 def show_gallery_metrics(metrics, prefix):
 
