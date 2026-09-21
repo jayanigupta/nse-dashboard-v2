@@ -354,10 +354,25 @@ with gallery_tabs[0]:
     show_gallery_metrics(recent_metrics, "recent")
 
 with gallery_tabs[1]:
-    show_gallery_metrics(historical_metrics, "historical")
-
-with gallery_tabs[2]:
     show_gallery_metrics(
         balance_sheet_metrics,
         "balance"
+    )
+
+with gallery_tabs[2]:
+    show_gallery_metrics(
+        cash_flow_metrics,
+        "cashflow"
+    )
+
+with gallery_tabs[3]:
+    show_gallery_metrics(
+        ratios_metrics,
+        "ratios"
+    )
+
+with gallery_tabs[4]:
+    show_gallery_metrics(
+        price_metrics,
+        "price"
     )
