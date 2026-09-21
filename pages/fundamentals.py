@@ -188,3 +188,176 @@ if run_screen:
         use_container_width=True,
         hide_index=True
     )
+
+
+# ─────────────────────────────────────────────
+# RATIO GALLERY
+# ─────────────────────────────────────────────
+
+st.divider()
+
+st.subheader("📚 Ratio Gallery")
+
+st.markdown(
+    """
+    <div style="
+        display:flex;
+        gap:8px;
+        margin-bottom:15px;
+        font-size:20px;
+    ">
+        <b>+</b>
+        <b>−</b>
+        <b>÷</b>
+        <b>×</b>
+        <b>&gt;</b>
+        <b>&lt;</b>
+        <b>=</b>
+        <b>AND</b>
+        <b>OR</b>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+gallery_tabs = st.tabs([
+    "Recent",
+    "Historical",
+    "Balance Sheet"
+])
+
+recent_metrics = [
+    "Market Capitalization",
+    "Price to Earning",
+    "Dividend yield",
+    "Price to book value",
+    "Return on assets",
+    "Debt to equity",
+    "Return on equity",
+    "Promoter holding",
+    "Earnings yield",
+    "Pledged percentage",
+    "Industry PE",
+    "Enterprise Value",
+    "Number of equity shares",
+    "Price to Quarterly Earning",
+    "Book value",
+    "Inventory turnover ratio",
+    "Quick ratio",
+    "Exports percentage",
+    "Piotroski score",
+    "G Factor",
+    "Asset Turnover Ratio",
+    "Financial leverage",
+    "Number of Shareholders",
+    "Unpledged promoter holding",
+    "Return on invested capital",
+    "Debtor days",
+    "Industry PBV",
+    "Credit rating",
+    "Working Capital Days",
+    "Earning Power",
+    "Graham Number",
+    "Cash Conversion Cycle",
+    "Days Payable Outstanding",
+    "Days Receivable Outstanding",
+    "Days Inventory Outstanding",
+    "Public holding",
+    "FII holding",
+    "Change in FII holding",
+    "DII holding",
+    "Change in DII holding"
+]
+
+historical_metrics = [
+    "Average return on equity 5Years",
+    "Average return on equity 3Years",
+    "Number of equity shares 10years back",
+    "Book value 3years back",
+    "Book value 5years back",
+    "Book value 10years back",
+    "Inventory turnover ratio 3Years back",
+    "Inventory turnover ratio 5Years back",
+    "Inventory turnover ratio 7Years back",
+    "Inventory turnover ratio 10Years back",
+    "Exports percentage 3Years back",
+    "Exports percentage 5Years back",
+    "Average 5years dividend",
+    "Average return on capital employed 3Years",
+    "Average return on capital employed 5Years",
+    "Average return on capital employed 7Years",
+    "Average return on capital employed 10Years",
+    "Working capital 3Years back",
+    "Working capital 5Years back",
+    "Working capital 7Years back",
+    "Working capital 10Years back",
+    "Debt 3Years back",
+    "Debt 5Years back",
+    "Debt 7Years back",
+    "Debt 10Years back"
+]
+
+balance_sheet_metrics = [
+    "Debt",
+    "Equity capital",
+    "Preference capital",
+    "Reserves",
+    "Secured loan",
+    "Unsecured loan",
+    "Balance sheet total",
+    "Gross block",
+    "Revaluation reserve",
+    "Accumulated depreciation",
+    "Net block",
+    "Capital work in progress",
+    "Investments",
+    "Current assets",
+    "Current liabilities",
+    "Book value of unquoted investments",
+    "Market value of quoted investments",
+    "Contingent liabilities",
+    "Total Assets",
+    "Working capital",
+    "Lease liabilities",
+    "Inventory",
+    "Trade receivables",
+    "Face value",
+    "Cash Equivalents",
+    "Advance from Customers",
+    "Trade Payables"
+]
+
+
+def show_gallery_metrics(metrics, prefix):
+
+    cols = st.columns(4)
+
+    for i, metric in enumerate(metrics):
+
+        with cols[i % 4]:
+
+            if st.button(
+                metric,
+                key=f"{prefix}_{i}",
+                use_container_width=True
+            ):
+
+                st.session_state.gallery_metric = metric
+
+                st.toast(
+                    f"Selected: {metric}",
+                    icon="✅"
+                )
+
+
+with gallery_tabs[0]:
+    show_gallery_metrics(recent_metrics, "recent")
+
+with gallery_tabs[1]:
+    show_gallery_metrics(historical_metrics, "historical")
+
+with gallery_tabs[2]:
+    show_gallery_metrics(
+        balance_sheet_metrics,
+        "balance"
+    )
