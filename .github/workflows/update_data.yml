@@ -25,7 +25,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install pandas requests
+        pip install pandas requests lxml
 
     - name: Run downloader
       run: |
