@@ -221,9 +221,11 @@ st.markdown(
 )
 
 gallery_tabs = st.tabs([
-    "Recent",
-    "Historical",
-    "Balance Sheet"
+    "Most Used",
+    "Balance Sheet",
+    "Cash Flow",
+    "Ratios",
+    "Price"
 ])
 
 recent_metrics = [
