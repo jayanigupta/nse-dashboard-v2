@@ -560,4 +560,3 @@ with gallery_tabs[4]:
         price_metrics,
         "price"
     )
-```
