@@ -47,10 +47,6 @@ jobs:
       run: |
         python update_nifty500.py
 
-    - name: Get Screener Fundamentals
-      run: |
-        python get_screener_data.py
-
     - name: Commit updated CSV
       run: |
         git config --global user.name "github-actions"
