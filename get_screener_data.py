@@ -23,7 +23,9 @@ for page in range(1, 20):
 
     response.raise_for_status()
 
-    tables = pd.read_html(response.text)
+    from io import StringIO
+
+    tables = pd.read_html(StringIO(response.text))
 
     if not tables:
         print(f"No table found on page {page}")
