@@ -58,11 +58,29 @@ st.subheader("🔎 Build Your Screen")
 col1, col2, col3, col4 = st.columns([3, 1.5, 2, 1.2])
 
 with col1:
+    if "gallery_metric" in st.session_state:
+        gallery_map = {
+            "Price to book value": "P/B",
+            "Price to Earning": "P/E",
+            "Return on equity": "ROE",
+            "Return on capital employed": "ROCE",
+            "Dividend yield": "Dividend Yield",
+            "Market Capitalization": "Market Cap",
+        }
+
+        default_field = gallery_map.get(
+            st.session_state.gallery_metric,
+            "P/E"
+        )
+    else:
+        default_field = "P/E"
+
     selected_field = st.selectbox(
         "Metric",
-        display_fields
+        display_fields,
+        index=display_fields.index(default_field)
     )
-
+    
 with col2:
     selected_operator = st.selectbox(
         "Condition",
