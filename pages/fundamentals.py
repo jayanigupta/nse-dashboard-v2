@@ -13,27 +13,14 @@ st.caption("Screener-style company analysis")
 st.divider()
 
 # ─────────────────────────────────────────────
-# SAMPLE DATA — TEMPORARY
+# LOAD SCREENER DATA
 # ─────────────────────────────────────────────
 
-sample_data = {
-    "Company": [
-        "Reliance Industries",
-        "TCS",
-        "Infosys",
-        "ITC",
-        "HDFC Bank",
-    ],
-    "Market Capitalization": [1800000, 1200000, 700000, 550000, 900000],
-    "Price to Earning": [24.5, 28.2, 22.1, 25.3, 19.4],
-    "Price to Book Value": [2.8, 12.4, 7.1, 8.2, 2.5],
-    "Return on Equity": [9.5, 51.2, 32.4, 27.8, 16.5],
-    "Return on Capital Employed": [10.2, 45.1, 38.7, 35.2, 8.9],
-    "Debt to Equity": [0.42, 0.08, 0.12, 0.01, 0.75],
-    "Dividend Yield": [0.35, 1.15, 2.10, 3.20, 1.05],
-}
+@st.cache_data
+def load_fundamentals():
+    return pd.read_csv("fundamentals.csv")
 
-df = pd.DataFrame(sample_data)
+df = load_fundamentals()
 
 
 # ─────────────────────────────────────────────
