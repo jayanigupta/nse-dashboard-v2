@@ -1,4 +1,3 @@
-```python
 import streamlit as st
 import pandas as pd
 
@@ -15,10 +14,7 @@ st.caption("Data source: Screener.in :)")
 st.divider()
 
 
-# ─────────────────────────────────────────────
-# LOAD SCREENER DATA
-# ─────────────────────────────────────────────
-
+# LOAD DATA
 @st.cache_data
 def load_fundamentals():
     return pd.read_csv("fundamentals.csv")
@@ -26,7 +22,7 @@ def load_fundamentals():
 
 df = load_fundamentals()
 
-# Clean Screener column spacing
+# Clean column names
 df.columns = (
     df.columns
     .str.strip()
@@ -34,10 +30,7 @@ df.columns = (
 )
 
 
-# ─────────────────────────────────────────────
 # FILTER OPTIONS
-# ─────────────────────────────────────────────
-
 field_aliases = {
     "P/E": "P/E",
     "P/B": "CMP / BV",
@@ -51,10 +44,7 @@ field_aliases = {
 display_fields = list(field_aliases.keys())
 
 
-# ─────────────────────────────────────────────
 # SESSION STATE
-# ─────────────────────────────────────────────
-
 if "filters" not in st.session_state:
     st.session_state.filters = []
 
@@ -62,17 +52,13 @@ if "selected_field" not in st.session_state:
     st.session_state.selected_field = "P/E"
 
 
-# ─────────────────────────────────────────────
 # FILTER BUILDER
-# ─────────────────────────────────────────────
-
 st.subheader("🔎 Build Your Screen")
 
 col1, col2, col3, col4 = st.columns([3, 1.5, 2, 1.2])
 
 
 with col1:
-
     selected_field = st.selectbox(
         "Metric",
         display_fields,
@@ -83,7 +69,6 @@ with col1:
 
 
 with col2:
-
     selected_operator = st.selectbox(
         "Condition",
         [">", "<", ">=", "<=", "=", "!="]
@@ -91,7 +76,6 @@ with col2:
 
 
 with col3:
-
     selected_value = st.number_input(
         "Value",
         value=0.0,
@@ -100,7 +84,6 @@ with col3:
 
 
 with col4:
-
     st.write("")
     st.write("")
 
@@ -110,26 +93,18 @@ with col4:
     )
 
 
-# ─────────────────────────────────────────────
 # ADD FILTER
-# ─────────────────────────────────────────────
-
 if add_filter:
 
-    # Remember the selected metric
     st.session_state.selected_field = selected_field
 
     csv_field = field_aliases[selected_field]
 
-    # Make sure the CSV actually contains this column
     if csv_field not in df.columns:
-
         st.error(
-            f"'{selected_field}' is not available in the current fundamentals.csv."
+            f"{selected_field} is not available in the current data."
         )
-
     else:
-
         st.session_state.filters.append({
             "display": selected_field,
             "field": csv_field,
@@ -143,10 +118,7 @@ if add_filter:
         )
 
 
-# ─────────────────────────────────────────────
-# SHOW ACTIVE FILTERS
-# ─────────────────────────────────────────────
-
+# ACTIVE FILTERS
 if st.session_state.filters:
 
     st.markdown("### Active Filters")
@@ -156,7 +128,6 @@ if st.session_state.filters:
         col1, col2 = st.columns([8, 1])
 
         with col1:
-
             st.info(
                 f"{filter_item['display']} "
                 f"{filter_item['operator']} "
@@ -164,25 +135,19 @@ if st.session_state.filters:
             )
 
         with col2:
-
             if st.button(
                 "✕",
                 key=f"remove_{i}"
             ):
-
                 st.session_state.filters.pop(i)
                 st.rerun()
 
 
-# ─────────────────────────────────────────────
-# BUTTONS
-# ─────────────────────────────────────────────
-
+# RUN / CLEAR
 col_run, col_clear = st.columns([2, 1])
 
 
 with col_run:
-
     run_screen = st.button(
         "🔍 Run Screen",
         use_container_width=True
@@ -190,7 +155,6 @@ with col_run:
 
 
 with col_clear:
-
     clear_filters = st.button(
         "🗑 Clear",
         use_container_width=True
@@ -198,16 +162,12 @@ with col_clear:
 
 
 if clear_filters:
-
     st.session_state.filters = []
     st.session_state.selected_field = "P/E"
     st.rerun()
 
 
-# ─────────────────────────────────────────────
 # RUN FILTERS
-# ─────────────────────────────────────────────
-
 if run_screen:
 
     result = df.copy()
@@ -218,15 +178,10 @@ if run_screen:
         operator = filter_item["operator"]
         value = filter_item["value"]
 
-        # Safety check
         if field not in result.columns:
-
-            st.error(
-                f"Column '{field}' was not found in fundamentals.csv."
-            )
+            st.error(f"Column not found: {field}")
             continue
 
-        # Convert the selected column to numbers
         numeric_column = pd.to_numeric(
             result[field],
             errors="coerce"
@@ -263,14 +218,10 @@ if run_screen:
     )
 
 
-# ─────────────────────────────────────────────
 # RATIO GALLERY
-# ─────────────────────────────────────────────
-
 st.divider()
 
 st.subheader("📚 Ratio Gallery")
-
 
 st.markdown(
     """
@@ -303,10 +254,6 @@ gallery_tabs = st.tabs([
     "Price"
 ])
 
-
-# ─────────────────────────────────────────────
-# GALLERY METRICS
-# ─────────────────────────────────────────────
 
 recent_metrics = [
     "Market Capitalization",
@@ -349,35 +296,6 @@ recent_metrics = [
     "Change in FII holding",
     "DII holding",
     "Change in DII holding"
-]
-
-
-historical_metrics = [
-    "Average return on equity 5Years",
-    "Average return on equity 3Years",
-    "Number of equity shares 10years back",
-    "Book value 3years back",
-    "Book value 5years back",
-    "Book value 10years back",
-    "Inventory turnover ratio 3Years back",
-    "Inventory turnover ratio 5Years back",
-    "Inventory turnover ratio 7Years back",
-    "Inventory turnover ratio 10Years back",
-    "Exports percentage 3Years back",
-    "Exports percentage 5Years back",
-    "Average 5years dividend",
-    "Average return on capital employed 3Years",
-    "Average return on capital employed 5Years",
-    "Average return on capital employed 7Years",
-    "Average return on capital employed 10Years",
-    "Working capital 3Years back",
-    "Working capital 5Years back",
-    "Working capital 7Years back",
-    "Working capital 10Years back",
-    "Debt 3Years back",
-    "Debt 5Years back",
-    "Debt 7Years back",
-    "Debt 10Years back"
 ]
 
 
@@ -458,32 +376,17 @@ price_metrics = [
 ]
 
 
-# ─────────────────────────────────────────────
-# GALLERY → FILTER MAPPING
-# ─────────────────────────────────────────────
-
+# GALLERY TO FILTER MAPPING
 gallery_map = {
-
     "Market Capitalization": "Market Cap",
-
     "Price to Earning": "P/E",
-
     "Price to book value": "P/B",
-
     "Return on equity": "ROE",
-
     "Return on capital employed": "ROCE",
-
     "Dividend yield": "Dividend Yield",
-
     "Industry PBV": "Industry PBV",
-
 }
 
-
-# ─────────────────────────────────────────────
-# SHOW GALLERY BUTTONS
-# ─────────────────────────────────────────────
 
 def show_gallery_metrics(metrics, prefix):
 
@@ -518,12 +421,7 @@ def show_gallery_metrics(metrics, prefix):
                 st.rerun()
 
 
-# ─────────────────────────────────────────────
-# GALLERY TABS
-# ─────────────────────────────────────────────
-
 with gallery_tabs[0]:
-
     show_gallery_metrics(
         recent_metrics,
         "recent"
@@ -531,7 +429,6 @@ with gallery_tabs[0]:
 
 
 with gallery_tabs[1]:
-
     show_gallery_metrics(
         balance_sheet_metrics,
         "balance"
@@ -539,7 +436,6 @@ with gallery_tabs[1]:
 
 
 with gallery_tabs[2]:
-
     show_gallery_metrics(
         cash_flow_metrics,
         "cashflow"
@@ -547,7 +443,6 @@ with gallery_tabs[2]:
 
 
 with gallery_tabs[3]:
-
     show_gallery_metrics(
         ratios_metrics,
         "ratios"
@@ -555,7 +450,6 @@ with gallery_tabs[3]:
 
 
 with gallery_tabs[4]:
-
     show_gallery_metrics(
         price_metrics,
         "price"
