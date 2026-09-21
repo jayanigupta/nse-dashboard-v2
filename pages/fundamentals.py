@@ -22,6 +22,7 @@ def load_fundamentals():
     return pd.read_csv("fundamentals.csv")
 
 df = load_fundamentals()
+st.write("DEBUG COLUMNS:", df.columns.tolist())
 
 
 # ─────────────────────────────────────────────
