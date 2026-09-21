@@ -29,13 +29,12 @@ df = load_fundamentals()
 # ─────────────────────────────────────────────
 
 field_aliases = {
-    "P/E": "Price to Earning",
-    "P/B": "Price to Book Value",
-    "ROE": "Return on Equity",
-    "ROCE": "Return on Capital Employed",
-    "Debt / Equity": "Debt to Equity",
-    "Dividend Yield": "Dividend Yield",
-    "Market Cap": "Market Capitalization",
+    "P/E": "P/E",
+    "P/B": "CMP / BV",
+    "ROCE": "ROCE %",
+    "ROE": "ROE 10Yr %",
+    "Dividend Yield": "Div Yld %",
+    "Market Cap": "Mar Cap Rs.Cr.",
 }
 
 display_fields = list(field_aliases.keys())
