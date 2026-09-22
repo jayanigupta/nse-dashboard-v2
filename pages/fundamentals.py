@@ -59,6 +59,15 @@ if "filters" not in st.session_state:
 if "selected_field" not in st.session_state:
     st.session_state.selected_field = "P/E"
 
+if "screen_result" not in st.session_state:
+    st.session_state.screen_result = None
+
+if "group_by" not in st.session_state:
+    st.session_state.group_by = "No Grouping"
+
+if "compare_metric" not in st.session_state:
+    st.session_state.compare_metric = None
+
 
 # =========================
 # FILTER BUILDER
@@ -197,6 +206,9 @@ if clear_filters:
 
     st.session_state.filters = []
     st.session_state.selected_field = "P/E"
+    st.session_state.screen_result = None
+    st.session_state.group_by = "No Grouping"
+    st.session_state.compare_metric = None
 
     st.rerun()
 
@@ -242,6 +254,8 @@ if run_screen:
 
         elif operator == "!=":
             result = result[numeric_column != value]
+
+    st.session_state.screen_result = result
 
 
     # =========================
