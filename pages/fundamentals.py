@@ -10,7 +10,7 @@ st.set_page_config(
 st.title("📊 Fundamentals")
 st.caption("Screener-style company analysis")
 st.caption("Data source: Screener.in :)")
- 
+
 st.divider()
 
 
