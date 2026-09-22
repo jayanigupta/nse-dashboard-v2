@@ -740,100 +740,145 @@ if st.session_state.screen_result is not None:
         )
 
 
-    # =========================
-    # MEDIAN COMPARISON
-    # =========================
+# =========================
+# DAILY MEDIAN COMPARISON
+# =========================
 
-    st.divider()
+st.divider()
 
-    st.subheader("📐 Compare Against Median")
+st.subheader("📐 Daily Median Comparison")
 
-    comparison_options = {}
+st.caption(
+    "Each company is compared with the median of the screened companies "
+    "for the current dataset."
+)
 
-    for display_name, csv_name in field_aliases.items():
 
-        if csv_name in result.columns:
-            comparison_options[display_name] = csv_name
+# Metrics we currently have in fundamentals.csv
+median_metrics = {
+    "P/E": "P/E",
+    "P/B": "CMP / BV",
+    "ROCE": "ROCE %",
+    "ROE": "ROE 10Yr %",
+    "Dividend Yield": "Div Yld %",
+    "Market Cap": "Mar Cap Rs.Cr.",
+    "Quarterly Sales Growth": "Qtr Sales Var %",
+    "Quarterly Profit Growth": "Qtr Profit Var %",
+    "Industry PBV": "Ind PBV",
+}
 
-    if "Qtr Sales Var %" in result.columns:
-        comparison_options[
-            "Quarterly Sales Growth"
-        ] = "Qtr Sales Var %"
 
-    if "Qtr Profit Var %" in result.columns:
-        comparison_options[
-            "Quarterly Profit Growth"
-        ] = "Qtr Profit Var %"
+# Keep only columns that actually exist
+available_median_metrics = {
+    name: column
+    for name, column in median_metrics.items()
+    if column in result.columns
+}
 
-    if comparison_options and len(result) > 0:
 
-        compare_metric = st.selectbox(
-            "Compare metric",
-            list(comparison_options.keys()),
-            key="compare_metric"
-        )
+if len(result) > 0 and available_median_metrics:
 
-        comparison_column = comparison_options[
-            compare_metric
-        ]
+    # ---------------------------------
+    # CALCULATE MEDIANS
+    # ---------------------------------
 
-        values = pd.to_numeric(
-            result[comparison_column],
+    median_values = {}
+
+    for display_name, csv_column in available_median_metrics.items():
+
+        numeric_values = pd.to_numeric(
+            result[csv_column],
             errors="coerce"
         )
 
-        median_value = values.median()
+        median_values[display_name] = numeric_values.median()
 
-        if pd.notna(median_value):
 
-            st.metric(
-                f"Median {compare_metric}",
-                f"{median_value:.2f}"
-            )
+    # ---------------------------------
+    # MEDIAN SUMMARY
+    # ---------------------------------
 
-            comparison_table = pd.DataFrame({
-                "Company": result["Company"],
-                compare_metric: values
-            })
+    st.markdown("### Today's Screened-Company Medians")
 
-            comparison_table[
-                "vs Median"
-            ] = values.apply(
-                lambda x:
-                "🟢 Above"
-                if x > median_value
-                else (
-                    "🔴 Below"
-                    if x < median_value
-                    else "⚪ Median"
-                )
+    median_summary = pd.DataFrame({
+        "Metric": list(median_values.keys()),
+        "Median": list(median_values.values())
+    })
+
+    median_summary["Median"] = median_summary["Median"].round(2)
+
+    st.dataframe(
+        median_summary,
+        use_container_width=True,
+        hide_index=True
+    )
+
+
+    # ---------------------------------
+    # COMPANY COMPARISON
+    # ---------------------------------
+
+    st.markdown("### Company vs Median")
+
+    comparison_table = pd.DataFrame({
+        "Company": result["Company"]
+    })
+
+
+    for display_name, csv_column in available_median_metrics.items():
+
+        values = pd.to_numeric(
+            result[csv_column],
+            errors="coerce"
+        )
+
+        median_value = median_values[display_name]
+
+
+        # Actual value
+        comparison_table[display_name] = values.round(2)
+
+
+        # Above / Below
+        comparison_table[
+            f"{display_name} vs Median"
+        ] = values.apply(
+            lambda x:
+            "🟢 Above"
+            if pd.notna(x)
+            and pd.notna(median_value)
+            and x > median_value
+
+            else (
+                "🔴 Below"
                 if pd.notna(x)
-                else "—"
+                and pd.notna(median_value)
+                and x < median_value
+
+                else (
+                    "⚪ Median"
+                    if pd.notna(x)
+                    and pd.notna(median_value)
+                    and x == median_value
+
+                    else "—"
+                )
             )
+        )
 
-            comparison_table[
-                "Difference from Median"
-            ] = (
-                values - median_value
-            ).round(2)
 
-            comparison_table = comparison_table.sort_values(
-                compare_metric,
-                ascending=False,
-                na_position="last"
-            )
+    st.dataframe(
+        comparison_table,
+        use_container_width=True,
+        hide_index=True
+    )
 
-            st.dataframe(
-                comparison_table,
-                use_container_width=True,
-                hide_index=True
-            )
 
-        else:
+else:
 
-            st.warning(
-                "There isn't enough numeric data to calculate the median."
-            )
+    st.info(
+        "Run a screen first to calculate daily medians."
+    )
 
 
 # =========================
