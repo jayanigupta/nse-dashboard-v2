@@ -741,21 +741,23 @@ if st.session_state.screen_result is not None:
 
 
 # =========================
-# DAILY MEDIAN COMPARISON
+# DAILY STATISTICS
 # =========================
 
 st.divider()
 
-st.subheader("📐 Daily Median Comparison")
+st.subheader("📊 Daily Statistics")
 
 st.caption(
-    "Each company is compared with the median of the screened companies "
-    "for the current dataset."
+    "Choose the metric and statistics you want to display."
 )
 
 
-# Metrics we currently have in fundamentals.csv
-median_metrics = {
+# =========================
+# AVAILABLE METRICS
+# =========================
+
+statistics_metrics = {
     "P/E": "P/E",
     "P/B": "CMP / BV",
     "ROCE": "ROCE %",
@@ -768,118 +770,356 @@ median_metrics = {
 }
 
 
-# Keep only columns that actually exist
-available_median_metrics = {
+available_statistics = {
     name: column
-    for name, column in median_metrics.items()
+    for name, column in statistics_metrics.items()
     if column in result.columns
 }
 
 
-if len(result) > 0 and available_median_metrics:
+if len(result) > 0 and available_statistics:
 
-    # ---------------------------------
-    # CALCULATE MEDIANS
-    # ---------------------------------
+    # =========================
+    # METRIC
+    # =========================
 
-    median_values = {}
-
-    for display_name, csv_column in available_median_metrics.items():
-
-        numeric_values = pd.to_numeric(
-            result[csv_column],
-            errors="coerce"
-        )
-
-        median_values[display_name] = numeric_values.median()
-
-
-    # ---------------------------------
-    # MEDIAN SUMMARY
-    # ---------------------------------
-
-    st.markdown("### Today's Screened-Company Medians")
-
-    median_summary = pd.DataFrame({
-        "Metric": list(median_values.keys()),
-        "Median": list(median_values.values())
-    })
-
-    median_summary["Median"] = median_summary["Median"].round(2)
-
-    st.dataframe(
-        median_summary,
-        use_container_width=True,
-        hide_index=True
+    selected_statistic = st.selectbox(
+        "Metric",
+        list(available_statistics.keys()),
+        key="daily_statistics_metric"
     )
 
-
-    # ---------------------------------
-    # COMPANY COMPARISON
-    # ---------------------------------
-
-    st.markdown("### Company vs Median")
-
-    comparison_table = pd.DataFrame({
-        "Company": result["Company"]
-    })
+    csv_column = available_statistics[
+        selected_statistic
+    ]
 
 
-    for display_name, csv_column in available_median_metrics.items():
-
-        values = pd.to_numeric(
-            result[csv_column],
-            errors="coerce"
-        )
-
-        median_value = median_values[display_name]
+    values = pd.to_numeric(
+        result[csv_column],
+        errors="coerce"
+    ).dropna()
 
 
-        # Actual value
-        comparison_table[display_name] = values.round(2)
+    if len(values) > 0:
+
+        # =========================
+        # STATISTICS
+        # =========================
+
+        mean_value = values.mean()
+        median_value = values.median()
+        minimum = values.min()
+        maximum = values.max()
+        q1 = values.quantile(0.25)
+        q3 = values.quantile(0.75)
+        std_dev = values.std()
 
 
-        # Above / Below
-        comparison_table[
-            f"{display_name} vs Median"
-        ] = values.apply(
-            lambda x:
-            "🟢 Above"
-            if pd.notna(x)
-            and pd.notna(median_value)
-            and x > median_value
+        # =========================
+        # DISPLAY BUTTONS
+        # =========================
 
-            else (
-                "🔴 Below"
-                if pd.notna(x)
-                and pd.notna(median_value)
-                and x < median_value
+        st.markdown("### Display")
 
-                else (
-                    "⚪ Median"
-                    if pd.notna(x)
-                    and pd.notna(median_value)
-                    and x == median_value
+        display_options = [
+            "Mean",
+            "Median",
+            "Minimum",
+            "Maximum",
+            "25th Percentile",
+            "75th Percentile",
+            "Standard Deviation",
+            "Rank",
+            "Percentile",
+            "vs Mean",
+            "vs Median",
+            "Top 25%"
+        ]
 
+
+        # Session state
+        if "selected_statistics" not in st.session_state:
+
+            st.session_state.selected_statistics = [
+                "Mean",
+                "Median",
+                "vs Median"
+            ]
+
+
+        # Buttons in 4 columns
+        button_cols = st.columns(4)
+
+
+        for i, option in enumerate(display_options):
+
+            with button_cols[i % 4]:
+
+                is_selected = (
+                    option
+                    in st.session_state.selected_statistics
+                )
+
+
+                if st.button(
+                    (
+                        "✓ " if is_selected else ""
+                    ) + option,
+                    key=f"stat_button_{option}",
+                    use_container_width=True
+                ):
+
+                    if option in st.session_state.selected_statistics:
+
+                        st.session_state.selected_statistics.remove(
+                            option
+                        )
+
+                    else:
+
+                        st.session_state.selected_statistics.append(
+                            option
+                        )
+
+                    st.rerun()
+
+
+        selected = st.session_state.selected_statistics
+
+
+        # =========================
+        # SUMMARY CARDS
+        # =========================
+
+        summary_values = {
+            "Mean": mean_value,
+            "Median": median_value,
+            "Minimum": minimum,
+            "Maximum": maximum,
+            "25th Percentile": q1,
+            "75th Percentile": q3,
+            "Standard Deviation": std_dev
+        }
+
+
+        selected_summary = [
+            option
+            for option in selected
+            if option in summary_values
+        ]
+
+
+        if selected_summary:
+
+            st.markdown("### Summary")
+
+
+            # 4 cards per row
+            card_cols = st.columns(4)
+
+
+            for i, option in enumerate(selected_summary):
+
+                with card_cols[i % 4]:
+
+                    st.metric(
+                        option,
+                        f"{summary_values[option]:.2f}"
+                    )
+
+
+        # =========================
+        # COMPANY TABLE
+        # =========================
+
+        company_options = [
+            "Rank",
+            "Percentile",
+            "vs Mean",
+            "vs Median",
+            "Top 25%"
+        ]
+
+
+        selected_company_options = [
+            option
+            for option in selected
+            if option in company_options
+        ]
+
+
+        if selected_company_options:
+
+            st.markdown("### Company Comparison")
+
+
+            company_values = pd.to_numeric(
+                result[csv_column],
+                errors="coerce"
+            )
+
+
+            comparison = pd.DataFrame({
+                "Company": result["Company"],
+                selected_statistic: company_values.round(2)
+            })
+
+
+            # -------------------------
+            # RANK
+            # -------------------------
+
+            if "Rank" in selected_company_options:
+
+                comparison["Rank"] = (
+                    company_values
+                    .rank(
+                        ascending=False,
+                        method="min"
+                    )
+                )
+
+
+            # -------------------------
+            # PERCENTILE
+            # -------------------------
+
+            if "Percentile" in selected_company_options:
+
+                comparison["Percentile"] = (
+                    company_values
+                    .rank(
+                        pct=True,
+                        method="average"
+                    )
+                    * 100
+                ).round(1)
+
+
+            # -------------------------
+            # VS MEAN
+            # -------------------------
+
+            if "vs Mean" in selected_company_options:
+
+                comparison["vs Mean"] = company_values.apply(
+                    lambda x:
+                    "🟢 Above"
+                    if pd.notna(x) and x > mean_value
+                    else (
+                        "🔴 Below"
+                        if pd.notna(x) and x < mean_value
+                        else (
+                            "⚪ Mean"
+                            if pd.notna(x)
+                            else "—"
+                        )
+                    )
+                )
+
+
+            # -------------------------
+            # VS MEDIAN
+            # -------------------------
+
+            if "vs Median" in selected_company_options:
+
+                comparison["vs Median"] = company_values.apply(
+                    lambda x:
+                    "🟢 Above"
+                    if pd.notna(x) and x > median_value
+                    else (
+                        "🔴 Below"
+                        if pd.notna(x) and x < median_value
+                        else (
+                            "⚪ Median"
+                            if pd.notna(x)
+                            else "—"
+                        )
+                    )
+                )
+
+
+            # -------------------------
+            # TOP 25%
+            # -------------------------
+
+            if "Top 25%" in selected_company_options:
+
+                comparison["Top 25%"] = company_values.apply(
+                    lambda x:
+                    "⭐ Top 25%"
+                    if pd.notna(x) and x >= q3
                     else "—"
                 )
+
+
+            comparison = comparison.sort_values(
+                selected_statistic,
+                ascending=False,
+                na_position="last"
             )
+
+
+            st.dataframe(
+                comparison,
+                use_container_width=True,
+                hide_index=True
+            )
+
+
+        # =========================
+        # TOP 25 TABLE
+        # =========================
+
+        if "Top 25%" in selected:
+
+            st.markdown("### 🏆 Top 25")
+
+            top_25 = pd.DataFrame({
+                "Company": result["Company"],
+                selected_statistic: company_values
+            })
+
+
+            top_25 = (
+                top_25
+                .dropna(
+                    subset=[selected_statistic]
+                )
+                .sort_values(
+                    selected_statistic,
+                    ascending=False
+                )
+                .head(25)
+            )
+
+
+            top_25[selected_statistic] = (
+                top_25[selected_statistic]
+                .round(2)
+            )
+
+
+            st.dataframe(
+                top_25,
+                use_container_width=True,
+                hide_index=True
+            )
+
+
+    else:
+
+        st.warning(
+            f"No numeric data available for {selected_statistic}."
         )
-
-
-    st.dataframe(
-        comparison_table,
-        use_container_width=True,
-        hide_index=True
-    )
 
 
 else:
 
     st.info(
-        "Run a screen first to calculate daily medians."
+        "Run a screen first to calculate statistics."
     )
-
 
 # =========================
 # RATIO GALLERY
