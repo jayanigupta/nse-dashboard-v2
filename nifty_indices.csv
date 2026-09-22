@@ -298,7 +298,8 @@ HDBFS,HDB Financial Services Ltd.,No,No,Yes,Yes,No,No,No
 HDFCAMC,HDFC Asset Management Company Ltd.,No,Yes,Yes,No,No,No,No
 HDFCBANK,HDFC Bank Ltd.,Yes,Yes,Yes,No,No,No,No
 HDFCLIFE,HDFC Life Insurance Company Ltd.,Yes,Yes,Yes,No,No,No,No
-HEG,HEG Ltd.,No,No,Yes,No,No,Yes,Yes
+HEG,,No,No,Yes,No,No,No,No
+HEGAM,HEG Advanced Materials Ltd.,No,No,No,No,No,Yes,Yes
 HEMIPROP,Hemisphere Properties India Ltd.,No,No,Yes,No,No,No,Yes
 HERITGFOOD,Heritage Foods Ltd.,No,No,Yes,No,No,No,Yes
 HEROMOTOCO,Hero MotoCorp Ltd.,No,No,Yes,Yes,Yes,No,No
