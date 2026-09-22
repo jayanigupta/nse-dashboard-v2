@@ -178,37 +178,34 @@ if st.session_state.filters:
                 st.session_state.filters.pop(i)
                 st.rerun()
 
-
 # =========================
 # RUN / CLEAR
 # =========================
 
 col_run, col_clear = st.columns([2, 1])
 
-
 with col_run:
-
     run_screen = st.button(
         "🔍 Run Screen",
         use_container_width=True
     )
 
-
 with col_clear:
-
     clear_filters = st.button(
         "🗑 Clear",
         use_container_width=True
     )
 
 
+# =========================
+# CLEAR
+# =========================
+
 if clear_filters:
 
     st.session_state.filters = []
     st.session_state.selected_field = "P/E"
     st.session_state.screen_result = None
-    st.session_state.group_by = "No Grouping"
-    st.session_state.compare_metric = None
 
     st.rerun()
 
@@ -228,7 +225,6 @@ if run_screen:
         value = filter_item["value"]
 
         if field not in result.columns:
-
             st.error(f"Column not found: {field}")
             continue
 
@@ -255,12 +251,17 @@ if run_screen:
         elif operator == "!=":
             result = result[numeric_column != value]
 
+    # SAVE SCREENED RESULT
     st.session_state.screen_result = result
 
 
-    # =========================
-    # RESULTS
-    # =========================
+# =========================
+# RESULTS
+# =========================
+
+if st.session_state.screen_result is not None:
+
+    result = st.session_state.screen_result.copy()
 
     st.divider()
 
@@ -270,71 +271,57 @@ if run_screen:
 
 
     # =========================
-    # GROUPING OPTIONS
+    # GROUPING
     # =========================
 
     st.markdown("### 📊 Group & Compare")
 
-
-    # Available columns in current dataset
-    available_groups = ["No Grouping"]
+    available_groups = [
+        "No Grouping"
+    ]
 
     if "Industry" in result.columns:
         available_groups.append("Industry")
 
-
-    # Market cap grouping
     if "Mar Cap Rs.Cr." in result.columns:
         available_groups.append("Market Cap Size")
 
-
-    # Price grouping
     if "CMP Rs." in result.columns:
         available_groups.append("Price Range")
 
-
-    # P/E grouping
     if "P/E" in result.columns:
         available_groups.append("P/E Range")
 
-
-    # P/B grouping
     if "CMP / BV" in result.columns:
         available_groups.append("P/B Range")
 
-
-    # Dividend grouping
     if "Div Yld %" in result.columns:
         available_groups.append("Dividend Yield Range")
 
-
-    # ROE grouping
     if "ROE 10Yr %" in result.columns:
         available_groups.append("ROE Range")
 
-
-    # ROCE grouping
     if "ROCE %" in result.columns:
         available_groups.append("ROCE Range")
 
-
-    # Quarterly growth
     if "Qtr Sales Var %" in result.columns:
         available_groups.append("Quarterly Sales Growth")
-
 
     if "Qtr Profit Var %" in result.columns:
         available_groups.append("Quarterly Profit Growth")
 
 
+    # IMPORTANT:
+    # Use the current selection as the widget key/value.
     group_by = st.selectbox(
         "Group by",
-        available_groups
+        available_groups,
+        key="group_by"
     )
 
 
     # =========================
-    # NO GROUPING
+    # GROUP RESULT
     # =========================
 
     if group_by == "No Grouping":
@@ -345,10 +332,6 @@ if run_screen:
             hide_index=True
         )
 
-
-    # =========================
-    # INDUSTRY
-    # =========================
 
     elif group_by == "Industry":
 
@@ -370,71 +353,37 @@ if run_screen:
         )
 
 
-    # =========================
-    # MARKET CAP SIZE
-    # =========================
-
     elif group_by == "Market Cap Size":
-
-        result = result.copy()
 
         market_cap = pd.to_numeric(
             result["Mar Cap Rs.Cr."],
             errors="coerce"
         )
 
-
-        def market_cap_category(value):
-
-            if pd.isna(value):
-                return "Unknown"
-
-            if value >= 20000:
-                return "Large Cap"
-
-            elif value >= 5000:
-                return "Mid Cap"
-
-            else:
-                return "Small Cap"
-
-
-        result["Market Cap Size"] = market_cap.apply(
-            market_cap_category
+        result["Market Cap Size"] = pd.cut(
+            market_cap,
+            bins=[
+                -float("inf"),
+                5000,
+                20000,
+                float("inf")
+            ],
+            labels=[
+                "Small Cap",
+                "Mid Cap",
+                "Large Cap"
+            ]
         )
-
 
         grouped = (
             result
-            .groupby("Market Cap Size")
+            .groupby(
+                "Market Cap Size",
+                observed=False
+            )
             .size()
             .reset_index(name="Companies")
         )
-
-
-        order = [
-            "Large Cap",
-            "Mid Cap",
-            "Small Cap",
-            "Unknown"
-        ]
-
-
-        grouped["sort_order"] = grouped[
-            "Market Cap Size"
-        ].apply(
-            lambda x: order.index(x)
-            if x in order
-            else 99
-        )
-
-
-        grouped = (
-            grouped
-            .sort_values("sort_order")
-            .drop(columns="sort_order")
-        )
-
 
         st.dataframe(
             grouped,
@@ -442,10 +391,6 @@ if run_screen:
             hide_index=True
         )
 
-
-    # =========================
-    # PRICE RANGE
-    # =========================
 
     elif group_by == "Price Range":
 
@@ -454,43 +399,34 @@ if run_screen:
             errors="coerce"
         )
 
-
-        bins = [
-            -float("inf"),
-            100,
-            500,
-            1000,
-            5000,
-            float("inf")
-        ]
-
-
-        labels = [
-            "Below ₹100",
-            "₹100–500",
-            "₹500–1,000",
-            "₹1,000–5,000",
-            "Above ₹5,000"
-        ]
-
-
-        grouped = (
-            pd.cut(
-                price,
-                bins=bins,
-                labels=labels
-            )
-            .value_counts()
-            .reindex(labels, fill_value=0)
-            .reset_index()
+        result["Price Range"] = pd.cut(
+            price,
+            bins=[
+                -float("inf"),
+                100,
+                500,
+                1000,
+                5000,
+                float("inf")
+            ],
+            labels=[
+                "Below ₹100",
+                "₹100–500",
+                "₹500–1,000",
+                "₹1,000–5,000",
+                "Above ₹5,000"
+            ]
         )
 
-
-        grouped.columns = [
-            "Price Range",
-            "Companies"
-        ]
-
+        grouped = (
+            result
+            .groupby(
+                "Price Range",
+                observed=False
+            )
+            .size()
+            .reset_index(name="Companies")
+        )
 
         st.dataframe(
             grouped,
@@ -498,10 +434,6 @@ if run_screen:
             hide_index=True
         )
 
-
-    # =========================
-    # P/E RANGE
-    # =========================
 
     elif group_by == "P/E Range":
 
@@ -510,43 +442,34 @@ if run_screen:
             errors="coerce"
         )
 
-
-        bins = [
-            -float("inf"),
-            10,
-            20,
-            30,
-            50,
-            float("inf")
-        ]
-
-
-        labels = [
-            "Below 10",
-            "10–20",
-            "20–30",
-            "30–50",
-            "Above 50"
-        ]
-
-
-        grouped = (
-            pd.cut(
-                pe,
-                bins=bins,
-                labels=labels
-            )
-            .value_counts()
-            .reindex(labels, fill_value=0)
-            .reset_index()
+        result["P/E Range"] = pd.cut(
+            pe,
+            bins=[
+                -float("inf"),
+                10,
+                20,
+                30,
+                50,
+                float("inf")
+            ],
+            labels=[
+                "Below 10",
+                "10–20",
+                "20–30",
+                "30–50",
+                "Above 50"
+            ]
         )
 
-
-        grouped.columns = [
-            "P/E Range",
-            "Companies"
-        ]
-
+        grouped = (
+            result
+            .groupby(
+                "P/E Range",
+                observed=False
+            )
+            .size()
+            .reset_index(name="Companies")
+        )
 
         st.dataframe(
             grouped,
@@ -554,10 +477,6 @@ if run_screen:
             hide_index=True
         )
 
-
-    # =========================
-    # P/B RANGE
-    # =========================
 
     elif group_by == "P/B Range":
 
@@ -566,43 +485,34 @@ if run_screen:
             errors="coerce"
         )
 
-
-        bins = [
-            -float("inf"),
-            1,
-            2,
-            5,
-            10,
-            float("inf")
-        ]
-
-
-        labels = [
-            "Below 1",
-            "1–2",
-            "2–5",
-            "5–10",
-            "Above 10"
-        ]
-
-
-        grouped = (
-            pd.cut(
-                pb,
-                bins=bins,
-                labels=labels
-            )
-            .value_counts()
-            .reindex(labels, fill_value=0)
-            .reset_index()
+        result["P/B Range"] = pd.cut(
+            pb,
+            bins=[
+                -float("inf"),
+                1,
+                2,
+                5,
+                10,
+                float("inf")
+            ],
+            labels=[
+                "Below 1",
+                "1–2",
+                "2–5",
+                "5–10",
+                "Above 10"
+            ]
         )
 
-
-        grouped.columns = [
-            "P/B Range",
-            "Companies"
-        ]
-
+        grouped = (
+            result
+            .groupby(
+                "P/B Range",
+                observed=False
+            )
+            .size()
+            .reset_index(name="Companies")
+        )
 
         st.dataframe(
             grouped,
@@ -610,10 +520,6 @@ if run_screen:
             hide_index=True
         )
 
-
-    # =========================
-    # DIVIDEND YIELD RANGE
-    # =========================
 
     elif group_by == "Dividend Yield Range":
 
@@ -622,43 +528,34 @@ if run_screen:
             errors="coerce"
         )
 
-
-        bins = [
-            -float("inf"),
-            1,
-            2,
-            4,
-            6,
-            float("inf")
-        ]
-
-
-        labels = [
-            "Below 1%",
-            "1–2%",
-            "2–4%",
-            "4–6%",
-            "Above 6%"
-        ]
-
-
-        grouped = (
-            pd.cut(
-                dividend,
-                bins=bins,
-                labels=labels
-            )
-            .value_counts()
-            .reindex(labels, fill_value=0)
-            .reset_index()
+        result["Dividend Yield Range"] = pd.cut(
+            dividend,
+            bins=[
+                -float("inf"),
+                1,
+                2,
+                4,
+                6,
+                float("inf")
+            ],
+            labels=[
+                "Below 1%",
+                "1–2%",
+                "2–4%",
+                "4–6%",
+                "Above 6%"
+            ]
         )
 
-
-        grouped.columns = [
-            "Dividend Yield Range",
-            "Companies"
-        ]
-
+        grouped = (
+            result
+            .groupby(
+                "Dividend Yield Range",
+                observed=False
+            )
+            .size()
+            .reset_index(name="Companies")
+        )
 
         st.dataframe(
             grouped,
@@ -666,10 +563,6 @@ if run_screen:
             hide_index=True
         )
 
-
-    # =========================
-    # ROE RANGE
-    # =========================
 
     elif group_by == "ROE Range":
 
@@ -678,45 +571,36 @@ if run_screen:
             errors="coerce"
         )
 
-
-        bins = [
-            -float("inf"),
-            0,
-            10,
-            20,
-            30,
-            50,
-            float("inf")
-        ]
-
-
-        labels = [
-            "Negative",
-            "0–10%",
-            "10–20%",
-            "20–30%",
-            "30–50%",
-            "Above 50%"
-        ]
-
-
-        grouped = (
-            pd.cut(
-                roe,
-                bins=bins,
-                labels=labels
-            )
-            .value_counts()
-            .reindex(labels, fill_value=0)
-            .reset_index()
+        result["ROE Range"] = pd.cut(
+            roe,
+            bins=[
+                -float("inf"),
+                0,
+                10,
+                20,
+                30,
+                50,
+                float("inf")
+            ],
+            labels=[
+                "Negative",
+                "0–10%",
+                "10–20%",
+                "20–30%",
+                "30–50%",
+                "Above 50%"
+            ]
         )
 
-
-        grouped.columns = [
-            "ROE Range",
-            "Companies"
-        ]
-
+        grouped = (
+            result
+            .groupby(
+                "ROE Range",
+                observed=False
+            )
+            .size()
+            .reset_index(name="Companies")
+        )
 
         st.dataframe(
             grouped,
@@ -724,10 +608,6 @@ if run_screen:
             hide_index=True
         )
 
-
-    # =========================
-    # ROCE RANGE
-    # =========================
 
     elif group_by == "ROCE Range":
 
@@ -736,45 +616,36 @@ if run_screen:
             errors="coerce"
         )
 
-
-        bins = [
-            -float("inf"),
-            0,
-            10,
-            20,
-            30,
-            50,
-            float("inf")
-        ]
-
-
-        labels = [
-            "Negative",
-            "0–10%",
-            "10–20%",
-            "20–30%",
-            "30–50%",
-            "Above 50%"
-        ]
-
-
-        grouped = (
-            pd.cut(
-                roce,
-                bins=bins,
-                labels=labels
-            )
-            .value_counts()
-            .reindex(labels, fill_value=0)
-            .reset_index()
+        result["ROCE Range"] = pd.cut(
+            roce,
+            bins=[
+                -float("inf"),
+                0,
+                10,
+                20,
+                30,
+                50,
+                float("inf")
+            ],
+            labels=[
+                "Negative",
+                "0–10%",
+                "10–20%",
+                "20–30%",
+                "30–50%",
+                "Above 50%"
+            ]
         )
 
-
-        grouped.columns = [
-            "ROCE Range",
-            "Companies"
-        ]
-
+        grouped = (
+            result
+            .groupby(
+                "ROCE Range",
+                observed=False
+            )
+            .size()
+            .reset_index(name="Companies")
+        )
 
         st.dataframe(
             grouped,
@@ -782,10 +653,6 @@ if run_screen:
             hide_index=True
         )
 
-
-    # =========================
-    # QUARTERLY SALES GROWTH
-    # =========================
 
     elif group_by == "Quarterly Sales Growth":
 
@@ -794,43 +661,34 @@ if run_screen:
             errors="coerce"
         )
 
-
-        bins = [
-            -float("inf"),
-            0,
-            10,
-            20,
-            50,
-            float("inf")
-        ]
-
-
-        labels = [
-            "Negative",
-            "0–10%",
-            "10–20%",
-            "20–50%",
-            "Above 50%"
-        ]
-
-
-        grouped = (
-            pd.cut(
-                growth,
-                bins=bins,
-                labels=labels
-            )
-            .value_counts()
-            .reindex(labels, fill_value=0)
-            .reset_index()
+        result["Quarterly Sales Growth"] = pd.cut(
+            growth,
+            bins=[
+                -float("inf"),
+                0,
+                10,
+                20,
+                50,
+                float("inf")
+            ],
+            labels=[
+                "Negative",
+                "0–10%",
+                "10–20%",
+                "20–50%",
+                "Above 50%"
+            ]
         )
 
-
-        grouped.columns = [
-            "Quarterly Sales Growth",
-            "Companies"
-        ]
-
+        grouped = (
+            result
+            .groupby(
+                "Quarterly Sales Growth",
+                observed=False
+            )
+            .size()
+            .reset_index(name="Companies")
+        )
 
         st.dataframe(
             grouped,
@@ -839,10 +697,6 @@ if run_screen:
         )
 
 
-    # =========================
-    # QUARTERLY PROFIT GROWTH
-    # =========================
-
     elif group_by == "Quarterly Profit Growth":
 
         growth = pd.to_numeric(
@@ -850,43 +704,34 @@ if run_screen:
             errors="coerce"
         )
 
-
-        bins = [
-            -float("inf"),
-            0,
-            10,
-            20,
-            50,
-            float("inf")
-        ]
-
-
-        labels = [
-            "Negative",
-            "0–10%",
-            "10–20%",
-            "20–50%",
-            "Above 50%"
-        ]
-
-
-        grouped = (
-            pd.cut(
-                growth,
-                bins=bins,
-                labels=labels
-            )
-            .value_counts()
-            .reindex(labels, fill_value=0)
-            .reset_index()
+        result["Quarterly Profit Growth"] = pd.cut(
+            growth,
+            bins=[
+                -float("inf"),
+                0,
+                10,
+                20,
+                50,
+                float("inf")
+            ],
+            labels=[
+                "Negative",
+                "0–10%",
+                "10–20%",
+                "20–50%",
+                "Above 50%"
+            ]
         )
 
-
-        grouped.columns = [
-            "Quarterly Profit Growth",
-            "Companies"
-        ]
-
+        grouped = (
+            result
+            .groupby(
+                "Quarterly Profit Growth",
+                observed=False
+            )
+            .size()
+            .reset_index(name="Companies")
+        )
 
         st.dataframe(
             grouped,
@@ -903,99 +748,57 @@ if run_screen:
 
     st.subheader("📐 Compare Against Median")
 
-    st.caption(
-        "Compare a metric against the median of the screened companies."
-    )
-
-
     comparison_options = {}
-
 
     for display_name, csv_name in field_aliases.items():
 
         if csv_name in result.columns:
+            comparison_options[display_name] = csv_name
 
-            comparison_options[
-                display_name
-            ] = csv_name
-
-
-    # Add growth metrics
     if "Qtr Sales Var %" in result.columns:
-
         comparison_options[
             "Quarterly Sales Growth"
         ] = "Qtr Sales Var %"
 
-
     if "Qtr Profit Var %" in result.columns:
-
         comparison_options[
             "Quarterly Profit Growth"
         ] = "Qtr Profit Var %"
-
 
     if comparison_options and len(result) > 0:
 
         compare_metric = st.selectbox(
             "Compare metric",
-            list(comparison_options.keys())
+            list(comparison_options.keys()),
+            key="compare_metric"
         )
-
 
         comparison_column = comparison_options[
             compare_metric
         ]
 
-
-        comparison_values = pd.to_numeric(
+        values = pd.to_numeric(
             result[comparison_column],
             errors="coerce"
         )
 
+        median_value = values.median()
 
-        median_value = comparison_values.median()
-
-
-        if pd.isna(median_value):
-
-            st.warning(
-                "There isn't enough numeric data to calculate the median."
-            )
-
-        else:
+        if pd.notna(median_value):
 
             st.metric(
                 f"Median {compare_metric}",
                 f"{median_value:.2f}"
             )
 
-
-            comparison_table = result[
-                ["Company", comparison_column]
-            ].copy()
-
-
-            comparison_table[
-                compare_metric
-            ] = pd.to_numeric(
-                comparison_table[
-                    comparison_column
-                ],
-                errors="coerce"
-            )
-
-
-            comparison_table = comparison_table.drop(
-                columns=[comparison_column]
-            )
-
+            comparison_table = pd.DataFrame({
+                "Company": result["Company"],
+                compare_metric: values
+            })
 
             comparison_table[
                 "vs Median"
-            ] = comparison_table[
-                compare_metric
-            ].apply(
+            ] = values.apply(
                 lambda x:
                 "🟢 Above"
                 if x > median_value
@@ -1008,15 +811,11 @@ if run_screen:
                 else "—"
             )
 
-
             comparison_table[
                 "Difference from Median"
             ] = (
-                comparison_table[
-                    compare_metric
-                ] - median_value
+                values - median_value
             ).round(2)
-
 
             comparison_table = comparison_table.sort_values(
                 compare_metric,
@@ -1024,11 +823,16 @@ if run_screen:
                 na_position="last"
             )
 
-
             st.dataframe(
                 comparison_table,
                 use_container_width=True,
                 hide_index=True
+            )
+
+        else:
+
+            st.warning(
+                "There isn't enough numeric data to calculate the median."
             )
 
 
