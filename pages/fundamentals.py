@@ -739,18 +739,21 @@ if st.session_state.screen_result is not None:
             hide_index=True
         )
 
-
 # =========================
 # DAILY STATISTICS
 # =========================
 
-st.divider()
+if st.session_state.screen_result is not None:
 
-st.subheader("📊 Daily Statistics")
+    result = st.session_state.screen_result.copy()
 
-st.caption(
-    "Choose the metric and statistics you want to display."
-)
+    st.divider()
+
+    st.subheader("📊 Daily Statistics")
+
+    st.caption(
+        "Choose the metric and statistics you want to display."
+    )
 
 
 # =========================
@@ -770,11 +773,17 @@ statistics_metrics = {
 }
 
 
-available_statistics = {
-    name: column
-    for name, column in statistics_metrics.items()
-    if column in result.columns
-}
+available_statistics = {}
+
+if st.session_state.screen_result is not None:
+
+    result = st.session_state.screen_result.copy()
+
+    available_statistics = {
+        name: column
+        for name, column in statistics_metrics.items()
+        if column in result.columns
+    }
 
 
 if len(result) > 0 and available_statistics:
