@@ -786,7 +786,7 @@ if st.session_state.screen_result is not None:
     }
 
 
-if len(result) > 0 and available_statistics:
+if st.session_state.screen_result is not None and len(result) > 0 and available_statistics:
 
     # =========================
     # METRIC
