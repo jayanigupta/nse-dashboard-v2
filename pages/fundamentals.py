@@ -1214,6 +1214,12 @@ if st.session_state.screen_result is not None:
 
         st.markdown("### 📋 Company Comparison")
 
+        comparison_table = comparison_table[
+            comparison_table["Company"].notna()
+            & (comparison_table["Company"].astype(str).str.strip() != "")
+        ]
+
+
         st.dataframe(
             comparison_table,
             use_container_width=True,
