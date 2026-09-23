@@ -25,6 +25,83 @@ def load_fundamentals():
 
 df = load_fundamentals()
 
+
+# =========================
+# LOAD INDUSTRY DATA
+# =========================
+
+@st.cache_data
+def load_industry_data():
+    return pd.read_csv("nifty500.csv")
+
+
+industry_df = load_industry_data()
+
+industry_df.columns = (
+    industry_df.columns
+    .str.strip()
+    .str.replace(r"\s+", " ", regex=True)
+)
+
+
+# =========================
+# CLEAN COMPANY NAMES
+# =========================
+
+def clean_company_name(name):
+
+    if pd.isna(name):
+        return ""
+
+    name = str(name).upper().strip()
+
+    for suffix in [
+        " LIMITED",
+        " LTD.",
+        " LTD",
+        " LIMITED.",
+        " PVT. LTD.",
+        " PVT LTD",
+        " PRIVATE LIMITED"
+    ]:
+
+        if name.endswith(suffix):
+            name = name[:-len(suffix)]
+
+    return name.strip()
+
+
+df["_CompanyMatch"] = df["Company"].apply(
+    clean_company_name
+)
+
+industry_df["_CompanyMatch"] = industry_df["Company Name"].apply(
+    clean_company_name
+)
+
+
+# =========================
+# ADD INDUSTRY
+# =========================
+
+industry_mapping = (
+    industry_df[
+        ["_CompanyMatch", "Symbol", "Industry"]
+    ]
+    .drop_duplicates("_CompanyMatch")
+)
+
+df = df.merge(
+    industry_mapping,
+    on="_CompanyMatch",
+    how="left"
+)
+
+df.drop(
+    columns=["_CompanyMatch"],
+    inplace=True
+)
+
 df.columns = (
     df.columns
     .str.strip()
@@ -65,8 +142,11 @@ if "screen_result" not in st.session_state:
 if "group_by" not in st.session_state:
     st.session_state.group_by = "No Grouping"
 
-if "compare_metric" not in st.session_state:
-    st.session_state.compare_metric = None
+if "peer_selected_metrics" not in st.session_state:
+    st.session_state.peer_selected_metrics = []
+
+if "peer_selected_stats" not in st.session_state:
+    st.session_state.peer_selected_stats = ["Value"]
 
 
 # =========================
@@ -75,7 +155,9 @@ if "compare_metric" not in st.session_state:
 
 st.subheader("🔎 Build Your Screen")
 
-col1, col2, col3, col4 = st.columns([3, 1.5, 2, 1.2])
+col1, col2, col3, col4 = st.columns(
+    [3, 1.5, 2, 1.2]
+)
 
 
 with col1:
@@ -139,7 +221,7 @@ if add_filter:
             "display": selected_field,
             "field": csv_field,
             "operator": selected_operator,
-            "value": selected_value
+            "value": float(selected_value)
         })
 
         st.toast(
@@ -156,7 +238,9 @@ if st.session_state.filters:
 
     st.markdown("### Active Filters")
 
-    for i, filter_item in enumerate(st.session_state.filters):
+    for i, filter_item in enumerate(
+        st.session_state.filters
+    ):
 
         col1, col2 = st.columns([8, 1])
 
@@ -178,19 +262,24 @@ if st.session_state.filters:
                 st.session_state.filters.pop(i)
                 st.rerun()
 
+
 # =========================
 # RUN / CLEAR
 # =========================
 
 col_run, col_clear = st.columns([2, 1])
 
+
 with col_run:
+
     run_screen = st.button(
         "🔍 Run Screen",
         use_container_width=True
     )
 
+
 with col_clear:
+
     clear_filters = st.button(
         "🗑 Clear",
         use_container_width=True
@@ -207,6 +296,9 @@ if clear_filters:
     st.session_state.selected_field = "P/E"
     st.session_state.screen_result = None
 
+    st.session_state.peer_selected_metrics = []
+    st.session_state.peer_selected_stats = ["Value"]
+
     st.rerun()
 
 
@@ -222,11 +314,19 @@ if run_screen:
 
         field = filter_item["field"]
         operator = filter_item["operator"]
-        value = filter_item["value"]
+        value = float(filter_item["value"])
 
         if field not in result.columns:
-            st.error(f"Column not found: {field}")
+
+            st.error(
+                f"Column not found: {field}"
+            )
+
             continue
+
+        # IMPORTANT:
+        # Always convert the selected column to numeric
+        # BEFORE applying the filter.
 
         numeric_column = pd.to_numeric(
             result[field],
@@ -234,25 +334,44 @@ if run_screen:
         )
 
         if operator == ">":
-            result = result[numeric_column > value]
+
+            mask = numeric_column > value
 
         elif operator == "<":
-            result = result[numeric_column < value]
+
+            mask = numeric_column < value
 
         elif operator == ">=":
-            result = result[numeric_column >= value]
+
+            mask = numeric_column >= value
 
         elif operator == "<=":
-            result = result[numeric_column <= value]
+
+            mask = numeric_column <= value
 
         elif operator == "=":
-            result = result[numeric_column == value]
+
+            mask = numeric_column == value
 
         elif operator == "!=":
-            result = result[numeric_column != value]
 
-    # SAVE SCREENED RESULT
+            mask = numeric_column != value
+
+        else:
+
+            mask = pd.Series(
+                True,
+                index=result.index
+            )
+
+        # Apply the mask to the dataframe itself
+        result = result.loc[mask].copy()
+
     st.session_state.screen_result = result
+
+    # Reset industry comparison when a new screen is run
+    st.session_state.peer_selected_metrics = []
+    st.session_state.peer_selected_stats = ["Value"]
 
 
 # =========================
@@ -261,7 +380,10 @@ if run_screen:
 
 if st.session_state.screen_result is not None:
 
-    result = st.session_state.screen_result.copy()
+    result = (
+        st.session_state.screen_result
+        .copy()
+    )
 
     st.divider()
 
@@ -296,23 +418,31 @@ if st.session_state.screen_result is not None:
         available_groups.append("P/B Range")
 
     if "Div Yld %" in result.columns:
-        available_groups.append("Dividend Yield Range")
+        available_groups.append(
+            "Dividend Yield Range"
+        )
 
     if "ROE 10Yr %" in result.columns:
-        available_groups.append("ROE Range")
+        available_groups.append(
+            "ROE Range"
+        )
 
     if "ROCE %" in result.columns:
-        available_groups.append("ROCE Range")
+        available_groups.append(
+            "ROCE Range"
+        )
 
     if "Qtr Sales Var %" in result.columns:
-        available_groups.append("Quarterly Sales Growth")
+        available_groups.append(
+            "Quarterly Sales Growth"
+        )
 
     if "Qtr Profit Var %" in result.columns:
-        available_groups.append("Quarterly Profit Growth")
+        available_groups.append(
+            "Quarterly Profit Growth"
+        )
 
 
-    # IMPORTANT:
-    # Use the current selection as the widget key/value.
     group_by = st.selectbox(
         "Group by",
         available_groups,
@@ -739,26 +869,646 @@ if st.session_state.screen_result is not None:
             hide_index=True
         )
 
-# =========================
-# DAILY STATISTICS
-# =========================
+
+# =========================================================
+# INDUSTRY EXPLORER
+# =========================================================
 
 if st.session_state.screen_result is not None:
 
-    result = st.session_state.screen_result.copy()
+    st.divider()
+
+    st.subheader("🏭 Industry Explorer")
+
+    st.caption(
+        "Select an industry and company, then add metrics and statistics "
+        "to compare the company with its industry peers."
+    )
+
+    # =========================================================
+    # START FROM SCREENED RESULTS
+    # =========================================================
+
+    industry_data = st.session_state.screen_result.copy()
+
+    if "Industry" not in industry_data.columns:
+
+        st.warning(
+            "Industry data is not available for the current companies."
+        )
+
+    else:
+
+        industry_data["Industry"] = (
+            industry_data["Industry"]
+            .fillna("")
+            .astype(str)
+            .str.strip()
+        )
+
+        industry_data = industry_data[
+            industry_data["Industry"].notna()
+            & (industry_data["Industry"] != "")
+            & (industry_data["Industry"].str.lower() != "nan")
+        ].copy()
+
+        if len(industry_data) == 0:
+
+            st.warning(
+                "No industry information is available."
+            )
+
+        else:
+
+            # =====================================================
+            # SELECT INDUSTRY
+            # =====================================================
+
+            industries = sorted(
+                industry_data["Industry"]
+                .unique()
+                .tolist()
+            )
+
+            selected_industry = st.selectbox(
+                "🏭 Select Industry",
+                industries,
+                key="industry_explorer"
+            )
+
+            # ALL companies in selected industry
+            industry_companies = (
+                industry_data[
+                    industry_data["Industry"]
+                    == selected_industry
+                ]
+                .copy()
+            )
+
+            st.markdown(
+                f"### {selected_industry}"
+            )
+
+            st.caption(
+                f"{len(industry_companies)} companies in this industry "
+                f"within the current screened universe."
+            )
+
+            # =====================================================
+            # SELECT COMPANY
+            # =====================================================
+
+            company_options = (
+                industry_companies["Company"]
+                .dropna()
+                .astype(str)
+                .sort_values()
+                .unique()
+                .tolist()
+            )
+
+            selected_peer_company = st.selectbox(
+                "🎯 Select Company",
+                ["None"] + company_options,
+                key="industry_company_selection"
+            )
+
+            # =====================================================
+            # ADD METRIC
+            # =====================================================
+
+            st.markdown("### 📊 Add Metric")
+
+            industry_metric_options = [
+                metric
+                for metric in field_aliases.keys()
+                if field_aliases[metric] in industry_companies.columns
+            ]
+
+            col1, col2 = st.columns([4, 1])
+
+            with col1:
+
+                selected_industry_metric = st.selectbox(
+                    "Metric",
+                    industry_metric_options,
+                    key="industry_metric_to_add"
+                )
+
+            with col2:
+
+                st.write("")
+                st.write("")
+
+                add_metric = st.button(
+                    "➕ Add",
+                    key="add_industry_metric"
+                )
+
+            if "industry_selected_metrics" not in st.session_state:
+                st.session_state.industry_selected_metrics = []
+
+            if add_metric:
+
+                if (
+                    selected_industry_metric
+                    not in st.session_state.industry_selected_metrics
+                ):
+
+                    st.session_state.industry_selected_metrics.append(
+                        selected_industry_metric
+                    )
+
+            # =====================================================
+            # CURRENT METRICS
+            # =====================================================
+
+            if st.session_state.industry_selected_metrics:
+
+                st.caption("Added metrics:")
+
+                metric_text = " • ".join(
+                    st.session_state.industry_selected_metrics
+                )
+
+                st.info(metric_text)
+
+            # =====================================================
+            # ADD STATISTIC
+            # =====================================================
+
+            st.markdown("### 📈 Add Statistic")
+
+            industry_statistic_options = [
+                "Mean",
+                "Median",
+                "Minimum",
+                "Maximum",
+                "25th Percentile",
+                "75th Percentile",
+                "Standard Deviation",
+                "IQR",
+                "Range",
+                "Rank",
+                "Percentile",
+                "Difference from Mean",
+                "Difference from Median",
+                "vs Mean",
+                "vs Median"
+            ]
+
+            col1, col2 = st.columns([4, 1])
+
+            with col1:
+
+                selected_industry_statistic = st.selectbox(
+                    "Statistic",
+                    industry_statistic_options,
+                    key="industry_statistic_to_add"
+                )
+
+            with col2:
+
+                st.write("")
+                st.write("")
+
+                add_statistic = st.button(
+                    "➕ Add",
+                    key="add_industry_statistic"
+                )
+
+            if "industry_selected_statistics" not in st.session_state:
+                st.session_state.industry_selected_statistics = []
+
+            if add_statistic:
+
+                if (
+                    selected_industry_statistic
+                    not in st.session_state.industry_selected_statistics
+                ):
+
+                    st.session_state.industry_selected_statistics.append(
+                        selected_industry_statistic
+                    )
+
+            # =====================================================
+            # CURRENT STATISTICS
+            # =====================================================
+
+            if st.session_state.industry_selected_statistics:
+
+                st.caption("Added statistics:")
+
+                statistic_text = " • ".join(
+                    st.session_state.industry_selected_statistics
+                )
+
+                st.info(statistic_text)
+
+            # =====================================================
+            # MAIN INDUSTRY TABLE
+            # =====================================================
+
+            if st.session_state.industry_selected_metrics:
+
+                st.markdown("### 👥 Industry Companies")
+
+                display_table = pd.DataFrame()
+
+                display_table["Company"] = (
+                    industry_companies["Company"]
+                    .astype(str)
+                )
+
+                # Highlight selected company
+                if selected_peer_company != "None":
+
+                    display_table["Company"] = display_table[
+                        "Company"
+                    ].apply(
+                        lambda x:
+                        f"⭐ {x}"
+                        if x == selected_peer_company
+                        else x
+                    )
+
+                # -------------------------------------------------
+                # EACH SELECTED METRIC
+                # -------------------------------------------------
+
+                for metric in st.session_state.industry_selected_metrics:
+
+                    csv_field = field_aliases[metric]
+
+                    numeric_values = pd.to_numeric(
+                        industry_companies[csv_field],
+                        errors="coerce"
+                    )
+
+                    display_table[metric] = numeric_values.values
+
+                    # -------------------------------------------------
+                    # STATISTICS FOR THIS METRIC
+                    # -------------------------------------------------
+
+                    valid_values = numeric_values.dropna()
+
+                    if len(valid_values) == 0:
+                        continue
+
+                    mean_value = valid_values.mean()
+                    median_value = valid_values.median()
+                    minimum_value = valid_values.min()
+                    maximum_value = valid_values.max()
+
+                    q25 = valid_values.quantile(0.25)
+                    q75 = valid_values.quantile(0.75)
+
+                    std_value = valid_values.std()
+
+                    iqr_value = q75 - q25
+
+                    range_value = (
+                        maximum_value
+                        - minimum_value
+                    )
+
+                    # Rank
+                    ranks = numeric_values.rank(
+                        method="min",
+                        ascending=False
+                    )
+
+                    # Percentile
+                    percentiles = numeric_values.rank(
+                        pct=True
+                    ) * 100
+
+                    # -------------------------------------------------
+                    # ADD SELECTED STATISTICS
+                    # -------------------------------------------------
+
+                    for statistic in (
+                        st.session_state
+                        .industry_selected_statistics
+                    ):
+
+                        column_name = (
+                            f"{metric} — {statistic}"
+                        )
+
+                        if statistic == "Mean":
+
+                            display_table[column_name] = (
+                                mean_value
+                            )
+
+                        elif statistic == "Median":
+
+                            display_table[column_name] = (
+                                median_value
+                            )
+
+                        elif statistic == "Minimum":
+
+                            display_table[column_name] = (
+                                minimum_value
+                            )
+
+                        elif statistic == "Maximum":
+
+                            display_table[column_name] = (
+                                maximum_value
+                            )
+
+                        elif statistic == "25th Percentile":
+
+                            display_table[column_name] = (
+                                q25
+                            )
+
+                        elif statistic == "75th Percentile":
+
+                            display_table[column_name] = (
+                                q75
+                            )
+
+                        elif statistic == "Standard Deviation":
+
+                            display_table[column_name] = (
+                                std_value
+                            )
+
+                        elif statistic == "IQR":
+
+                            display_table[column_name] = (
+                                iqr_value
+                            )
+
+                        elif statistic == "Range":
+
+                            display_table[column_name] = (
+                                range_value
+                            )
+
+                        elif statistic == "Rank":
+
+                            display_table[column_name] = (
+                                ranks.values
+                            )
+
+                        elif statistic == "Percentile":
+
+                            display_table[column_name] = (
+                                percentiles.values
+                            )
+
+                        elif statistic == "Difference from Mean":
+
+                            display_table[column_name] = (
+                                numeric_values
+                                - mean_value
+                            )
+
+                        elif statistic == "Difference from Median":
+
+                            display_table[column_name] = (
+                                numeric_values
+                                - median_value
+                            )
+
+                        elif statistic == "vs Mean":
+
+                            display_table[column_name] = (
+                                numeric_values.apply(
+                                    lambda x:
+                                    "🟢 Above"
+                                    if x > mean_value
+                                    else (
+                                        "🔴 Below"
+                                        if x < mean_value
+                                        else "⚪ Mean"
+                                    )
+                                    if pd.notna(x)
+                                    else "N/A"
+                                )
+                            )
+
+                        elif statistic == "vs Median":
+
+                            display_table[column_name] = (
+                                numeric_values.apply(
+                                    lambda x:
+                                    "🟢 Above"
+                                    if x > median_value
+                                    else (
+                                        "🔴 Below"
+                                        if x < median_value
+                                        else "⚪ Median"
+                                    )
+                                    if pd.notna(x)
+                                    else "N/A"
+                                )
+                            )
+
+                # -------------------------------------------------
+                # SHOW TABLE
+                # -------------------------------------------------
+
+                st.dataframe(
+                    display_table,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+                # =================================================
+                # SELECTED COMPANY COMPARISON
+                # =================================================
+
+                if selected_peer_company != "None":
+
+                    st.markdown(
+                        f"### 🎯 {selected_peer_company} vs Industry"
+                    )
+
+                    selected_company_row = industry_companies[
+                        industry_companies["Company"].astype(str)
+                        == selected_peer_company
+                    ]
+
+                    if len(selected_company_row) > 0:
+
+                        selected_company_row = (
+                            selected_company_row.iloc[0]
+                        )
+
+                        comparison_rows = []
+
+                        for metric in (
+                            st.session_state
+                            .industry_selected_metrics
+                        ):
+
+                            csv_field = field_aliases[metric]
+
+                            value = pd.to_numeric(
+                                pd.Series(
+                                    [selected_company_row[csv_field]]
+                                ),
+                                errors="coerce"
+                            ).iloc[0]
+
+                            numeric_values = pd.to_numeric(
+                                industry_companies[csv_field],
+                                errors="coerce"
+                            ).dropna()
+
+                            if pd.isna(value) or len(numeric_values) == 0:
+                                continue
+
+                            mean_value = numeric_values.mean()
+                            median_value = numeric_values.median()
+
+                            rank = (
+                                numeric_values
+                                .rank(
+                                    method="min",
+                                    ascending=False
+                                )
+                            )
+
+                            company_rank = (
+                                rank[
+                                    numeric_values
+                                    == value
+                                ]
+                                .iloc[0]
+                            )
+
+                            percentile = (
+                                numeric_values
+                                .rank(pct=True)
+                                [
+                                    numeric_values
+                                    == value
+                                ]
+                                .iloc[0]
+                                * 100
+                            )
+
+                            comparison_rows.append({
+                                "Metric": metric,
+                                "Company Value": value,
+                                "Industry Mean": mean_value,
+                                "Industry Median": median_value,
+                                "Rank": f"{int(company_rank)} / {len(numeric_values)}",
+                                "Percentile": f"{percentile:.1f}%"
+                            })
+
+                        if comparison_rows:
+
+                            st.dataframe(
+                                pd.DataFrame(comparison_rows),
+                                use_container_width=True,
+                                hide_index=True
+                            )
+
+            # =====================================================
+            # INDUSTRY SUMMARY BOX
+            # =====================================================
+
+            if st.session_state.industry_selected_metrics:
+
+                st.markdown("### 📦 Industry Statistics")
+
+                summary_rows = []
+
+                for metric in (
+                    st.session_state.industry_selected_metrics
+                ):
+
+                    csv_field = field_aliases[metric]
+
+                    values = pd.to_numeric(
+                        industry_companies[csv_field],
+                        errors="coerce"
+                    ).dropna()
+
+                    if len(values) == 0:
+                        continue
+
+                    summary = {
+                        "Metric": metric,
+                        "Companies": len(values)
+                    }
+
+                    if "Mean" in st.session_state.industry_selected_statistics:
+                        summary["Mean"] = values.mean()
+
+                    if "Median" in st.session_state.industry_selected_statistics:
+                        summary["Median"] = values.median()
+
+                    if "Minimum" in st.session_state.industry_selected_statistics:
+                        summary["Minimum"] = values.min()
+
+                    if "Maximum" in st.session_state.industry_selected_statistics:
+                        summary["Maximum"] = values.max()
+
+                    if "25th Percentile" in st.session_state.industry_selected_statistics:
+                        summary["25th Percentile"] = values.quantile(0.25)
+
+                    if "75th Percentile" in st.session_state.industry_selected_statistics:
+                        summary["75th Percentile"] = values.quantile(0.75)
+
+                    if "Standard Deviation" in st.session_state.industry_selected_statistics:
+                        summary["Standard Deviation"] = values.std()
+
+                    if "IQR" in st.session_state.industry_selected_statistics:
+                        summary["IQR"] = (
+                            values.quantile(0.75)
+                            - values.quantile(0.25)
+                        )
+
+                    if "Range" in st.session_state.industry_selected_statistics:
+                        summary["Range"] = (
+                            values.max()
+                            - values.min()
+                        )
+
+                    summary_rows.append(summary)
+
+                if summary_rows:
+
+                    st.dataframe(
+                        pd.DataFrame(summary_rows),
+                        use_container_width=True,
+                        hide_index=True
+                    )
+
+
+# =========================================================
+# DAILY STATISTICS
+# TEMPORARILY COMMENTED OUT
+# =========================================================
+
+"""
+if st.session_state.screen_result is not None:
+
+    result = (
+        st.session_state.screen_result
+        .copy()
+    )
 
     st.divider()
 
-    st.subheader("📊 Daily Statistics")
+    st.subheader(
+        "📊 Daily Statistics"
+    )
 
     st.caption(
         "Compare multiple financial metrics across the screened companies."
     )
 
-
-    # =========================
-    # AVAILABLE NUMERIC COLUMNS
-    # =========================
 
     excluded_columns = [
         "S.No.",
@@ -777,41 +1527,51 @@ if st.session_state.screen_result is not None:
             errors="coerce"
         )
 
-        # Only include columns that contain numeric data
         if numeric_values.notna().sum() > 0:
 
             numeric_metrics[column] = column
 
 
-    # =========================
-    # FRIENDLY NAMES
-    # =========================
-
     metric_names = {
+
         "P/E": "P/E",
+
         "CMP / BV": "P/B",
+
         "ROCE %": "ROCE",
+
         "ROE 10Yr %": "ROE",
+
         "Div Yld %": "Dividend Yield",
+
         "Mar Cap Rs.Cr.": "Market Cap",
+
         "CMP Rs.": "Current Market Price",
-        "Qtr Sales Var %": "Quarterly Sales Growth",
-        "Qtr Profit Var %": "Quarterly Profit Growth",
-        "Ind PBV": "Industry PBV",
+
+        "Qtr Sales Var %":
+            "Quarterly Sales Growth",
+
+        "Qtr Profit Var %":
+            "Quarterly Profit Growth",
+
+        "Ind PBV":
+            "Industry PBV"
     }
 
 
     display_metrics = {
-        metric_names.get(column, column): column
+        metric_names.get(
+            column,
+            column
+        ): column
+
         for column in numeric_metrics
     }
 
 
-    # =========================
-    # SELECT METRICS
-    # =========================
-
-    st.markdown("### 📌 Metrics")
+    st.markdown(
+        "### 📌 Metrics"
+    )
 
     selected_metrics = st.multiselect(
         "Choose the metrics you want in the table",
@@ -830,11 +1590,9 @@ if st.session_state.screen_result is not None:
 
     if selected_metrics:
 
-        # =========================
-        # STATISTICS TO DISPLAY
-        # =========================
-
-        st.markdown("### 🔘 What do you want to display?")
+        st.markdown(
+            "### 🔘 What do you want to display?"
+        )
 
         statistic_options = [
             "Value",
@@ -867,15 +1625,16 @@ if st.session_state.screen_result is not None:
             ]
 
 
-        # =========================
-        # STATISTIC BUTTONS
-        # =========================
-
         button_cols = st.columns(4)
 
-        for i, option in enumerate(statistic_options):
 
-            with button_cols[i % 4]:
+        for i, option in enumerate(
+            statistic_options
+        ):
+
+            with button_cols[
+                i % 4
+            ]:
 
                 is_selected = (
                     option
@@ -883,7 +1642,9 @@ if st.session_state.screen_result is not None:
                 )
 
                 button_text = (
-                    "✓ " if is_selected else ""
+                    "✓ "
+                    if is_selected
+                    else ""
                 ) + option
 
 
@@ -893,7 +1654,9 @@ if st.session_state.screen_result is not None:
                     use_container_width=True
                 ):
 
-                    if option in st.session_state.selected_daily_stats:
+                    if option in (
+                        st.session_state.selected_daily_stats
+                    ):
 
                         st.session_state.selected_daily_stats.remove(
                             option
@@ -913,18 +1676,10 @@ if st.session_state.screen_result is not None:
         )
 
 
-        # =========================
-        # BUILD COMPARISON TABLE
-        # =========================
-
         comparison_table = pd.DataFrame({
             "Company": result["Company"]
         })
 
-
-        # =========================
-        # PROCESS EACH METRIC
-        # =========================
 
         for metric in selected_metrics:
 
@@ -934,11 +1689,6 @@ if st.session_state.screen_result is not None:
                 result[column],
                 errors="coerce"
             )
-
-
-            # -------------------------
-            # BASIC STATISTICS
-            # -------------------------
 
             valid_values = values.dropna()
 
@@ -960,119 +1710,102 @@ if st.session_state.screen_result is not None:
             value_range = maximum - minimum
 
 
-            # -------------------------
-            # VALUE
-            # -------------------------
-
             if "Value" in selected_stats:
 
-                comparison_table[metric] = (
-                    values.round(2)
-                )
+                comparison_table[
+                    metric
+                ] = values.round(2)
 
-
-            # -------------------------
-            # MEAN
-            # -------------------------
 
             if "Mean" in selected_stats:
 
                 comparison_table[
                     f"{metric} Mean"
-                ] = round(mean_value, 2)
+                ] = round(
+                    mean_value,
+                    2
+                )
 
-
-            # -------------------------
-            # MEDIAN
-            # -------------------------
 
             if "Median" in selected_stats:
 
                 comparison_table[
                     f"{metric} Median"
-                ] = round(median_value, 2)
+                ] = round(
+                    median_value,
+                    2
+                )
 
-
-            # -------------------------
-            # MINIMUM
-            # -------------------------
 
             if "Minimum" in selected_stats:
 
                 comparison_table[
                     f"{metric} Min"
-                ] = round(minimum, 2)
+                ] = round(
+                    minimum,
+                    2
+                )
 
-
-            # -------------------------
-            # MAXIMUM
-            # -------------------------
 
             if "Maximum" in selected_stats:
 
                 comparison_table[
                     f"{metric} Max"
-                ] = round(maximum, 2)
+                ] = round(
+                    maximum,
+                    2
+                )
 
-
-            # -------------------------
-            # 25TH PERCENTILE
-            # -------------------------
 
             if "25th Percentile" in selected_stats:
 
                 comparison_table[
                     f"{metric} Q1"
-                ] = round(q1, 2)
+                ] = round(
+                    q1,
+                    2
+                )
 
-
-            # -------------------------
-            # 75TH PERCENTILE
-            # -------------------------
 
             if "75th Percentile" in selected_stats:
 
                 comparison_table[
                     f"{metric} Q3"
-                ] = round(q3, 2)
+                ] = round(
+                    q3,
+                    2
+                )
 
-
-            # -------------------------
-            # STANDARD DEVIATION
-            # -------------------------
 
             if "Standard Deviation" in selected_stats:
 
                 comparison_table[
                     f"{metric} Std Dev"
-                ] = round(std_dev, 2)
+                ] = round(
+                    std_dev,
+                    2
+                )
 
-
-            # -------------------------
-            # IQR
-            # -------------------------
 
             if "IQR" in selected_stats:
 
                 comparison_table[
                     f"{metric} IQR"
-                ] = round(iqr, 2)
+                ] = round(
+                    iqr,
+                    2
+                )
 
-
-            # -------------------------
-            # RANGE
-            # -------------------------
 
             if "Range" in selected_stats:
 
                 comparison_table[
                     f"{metric} Range"
-                ] = round(value_range, 2)
+                ] = round(
+                    value_range,
+                    2
+                )
 
-
-            # -------------------------
-            # RANK
-            # -------------------------
 
             if "Rank" in selected_stats:
 
@@ -1086,10 +1819,6 @@ if st.session_state.screen_result is not None:
                 )
 
 
-            # -------------------------
-            # PERCENTILE
-            # -------------------------
-
             if "Percentile" in selected_stats:
 
                 comparison_table[
@@ -1098,39 +1827,30 @@ if st.session_state.screen_result is not None:
                     values.rank(
                         pct=True,
                         method="average"
-                    ) * 100
+                    )
+                    * 100
                 ).round(1)
 
-
-            # -------------------------
-            # DIFFERENCE FROM MEAN
-            # -------------------------
 
             if "Difference from Mean" in selected_stats:
 
                 comparison_table[
                     f"{metric} Δ Mean"
                 ] = (
-                    values - mean_value
+                    values
+                    - mean_value
                 ).round(2)
 
-
-            # -------------------------
-            # DIFFERENCE FROM MEDIAN
-            # -------------------------
 
             if "Difference from Median" in selected_stats:
 
                 comparison_table[
                     f"{metric} Δ Median"
                 ] = (
-                    values - median_value
+                    values
+                    - median_value
                 ).round(2)
 
-
-            # -------------------------
-            # VS MEAN
-            # -------------------------
 
             if "vs Mean" in selected_stats:
 
@@ -1139,10 +1859,14 @@ if st.session_state.screen_result is not None:
                 ] = values.apply(
                     lambda x:
                     "🟢 Above"
-                    if pd.notna(x) and x > mean_value
+                    if pd.notna(x)
+                    and x > mean_value
+
                     else (
                         "🔴 Below"
-                        if pd.notna(x) and x < mean_value
+                        if pd.notna(x)
+                        and x < mean_value
+
                         else (
                             "⚪ Mean"
                             if pd.notna(x)
@@ -1152,10 +1876,6 @@ if st.session_state.screen_result is not None:
                 )
 
 
-            # -------------------------
-            # VS MEDIAN
-            # -------------------------
-
             if "vs Median" in selected_stats:
 
                 comparison_table[
@@ -1163,10 +1883,14 @@ if st.session_state.screen_result is not None:
                 ] = values.apply(
                     lambda x:
                     "🟢 Above"
-                    if pd.notna(x) and x > median_value
+                    if pd.notna(x)
+                    and x > median_value
+
                     else (
                         "🔴 Below"
-                        if pd.notna(x) and x < median_value
+                        if pd.notna(x)
+                        and x < median_value
+
                         else (
                             "⚪ Median"
                             if pd.notna(x)
@@ -1176,49 +1900,9 @@ if st.session_state.screen_result is not None:
                 )
 
 
-            # -------------------------
-            # TOP 25%
-            # -------------------------
-
-            if "Top 25%" in selected_stats:
-
-                comparison_table[
-                    f"{metric} Top 25%"
-                ] = values.apply(
-                    lambda x:
-                    "⭐ Top 25%"
-                    if pd.notna(x) and x >= q3
-                    else "—"
-                )
-
-
-            # -------------------------
-            # BOTTOM 25%
-            # -------------------------
-
-            if "Bottom 25%" in selected_stats:
-
-                comparison_table[
-                    f"{metric} Bottom 25%"
-                ] = values.apply(
-                    lambda x:
-                    "🔻 Bottom 25%"
-                    if pd.notna(x) and x <= q1
-                    else "—"
-                )
-
-
-        # =========================
-        # DISPLAY TABLE
-        # =========================
-
-        st.markdown("### 📋 Company Comparison")
-
-        comparison_table = comparison_table[
-            comparison_table["Company"].notna()
-            & (comparison_table["Company"].astype(str).str.strip() != "")
-        ]
-
+        st.markdown(
+            "### 📋 Company Comparison"
+        )
 
         st.dataframe(
             comparison_table,
@@ -1227,13 +1911,12 @@ if st.session_state.screen_result is not None:
         )
 
 
-        # =========================
-        # DAILY SUMMARY
-        # =========================
-
-        st.markdown("### 📈 Daily Summary")
+        st.markdown(
+            "### 📈 Daily Summary"
+        )
 
         summary_rows = []
+
 
         for metric in selected_metrics:
 
@@ -1247,22 +1930,48 @@ if st.session_state.screen_result is not None:
             if len(values) == 0:
                 continue
 
+
             summary_rows.append({
+
                 "Metric": metric,
+
                 "Companies": len(values),
-                "Mean": round(values.mean(), 2),
-                "Median": round(values.median(), 2),
-                "Min": round(values.min(), 2),
+
+                "Mean": round(
+                    values.mean(),
+                    2
+                ),
+
+                "Median": round(
+                    values.median(),
+                    2
+                ),
+
+                "Min": round(
+                    values.min(),
+                    2
+                ),
+
                 "25th Percentile": round(
                     values.quantile(0.25),
                     2
                 ),
+
                 "75th Percentile": round(
                     values.quantile(0.75),
                     2
                 ),
-                "Max": round(values.max(), 2),
-                "Std Dev": round(values.std(), 2),
+
+                "Max": round(
+                    values.max(),
+                    2
+                ),
+
+                "Std Dev": round(
+                    values.std(),
+                    2
+                ),
+
                 "IQR": round(
                     values.quantile(0.75)
                     - values.quantile(0.25),
@@ -1281,147 +1990,16 @@ if st.session_state.screen_result is not None:
             use_container_width=True,
             hide_index=True
         )
+"""
 
 
-    else:
-
-        st.info(
-            "Select at least one metric above."
-        )
-
-else:
-
-    st.info(
-        "Run a screen first to calculate daily statistics."
-    )
-    
-# =========================
-# RATIO GALLERY
-# =========================
+# =========================================================
+# RATIOS
+# =========================================================
 
 st.divider()
 
-st.subheader("📚 Ratio Gallery")
-
-st.markdown(
-    """
-    <div style="
-        display:flex;
-        gap:8px;
-        margin-bottom:15px;
-        font-size:20px;
-    ">
-        <b>+</b>
-        <b>−</b>
-        <b>÷</b>
-        <b>×</b>
-        <b>&gt;</b>
-        <b>&lt;</b>
-        <b>=</b>
-        <b>AND</b>
-        <b>OR</b>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-
-gallery_tabs = st.tabs([
-    "Most Used",
-    "Balance Sheet",
-    "Cash Flow",
-    "Ratios",
-    "Price"
-])
-
-
-# =========================
-# GALLERY METRICS
-# =========================
-
-recent_metrics = [
-    "Market Capitalization",
-    "Price to Earning",
-    "Dividend yield",
-    "Price to book value",
-    "Return on assets",
-    "Debt to equity",
-    "Return on equity",
-    "Promoter holding",
-    "Earnings yield",
-    "Pledged percentage",
-    "Industry PE",
-    "Enterprise Value",
-    "Number of equity shares",
-    "Price to Quarterly Earning",
-    "Book value",
-    "Inventory turnover ratio",
-    "Quick ratio",
-    "Exports percentage",
-    "Piotroski score",
-    "G Factor",
-    "Asset Turnover Ratio",
-    "Financial leverage",
-    "Number of Shareholders",
-    "Unpledged promoter holding",
-    "Return on invested capital",
-    "Debtor days",
-    "Industry PBV",
-    "Credit rating",
-    "Working Capital Days",
-    "Earning Power",
-    "Graham Number",
-    "Cash Conversion Cycle",
-    "Days Payable Outstanding",
-    "Days Receivable Outstanding",
-    "Days Inventory Outstanding",
-    "Public holding",
-    "FII holding",
-    "Change in FII holding",
-    "DII holding",
-    "Change in DII holding"
-]
-
-
-balance_sheet_metrics = [
-    "Debt",
-    "Equity capital",
-    "Preference capital",
-    "Reserves",
-    "Secured loan",
-    "Unsecured loan",
-    "Balance sheet total",
-    "Gross block",
-    "Revaluation reserve",
-    "Accumulated depreciation",
-    "Net block",
-    "Capital work in progress",
-    "Investments",
-    "Current assets",
-    "Current liabilities",
-    "Book value of unquoted investments",
-    "Market value of quoted investments",
-    "Contingent liabilities",
-    "Total Assets",
-    "Working capital",
-    "Lease liabilities",
-    "Inventory",
-    "Trade receivables",
-    "Face value",
-    "Cash Equivalents",
-    "Advance from Customers",
-    "Trade Payables"
-]
-
-
-cash_flow_metrics = [
-    "Cash from Operating Activity",
-    "Cash from Investing Activity",
-    "Cash from Financing Activity",
-    "Net Cash Flow",
-    "Free Cash Flow"
-]
-
+st.subheader("📐 Ratios")
 
 ratios_metrics = [
     "Price to Earning",
@@ -1448,107 +2026,48 @@ ratios_metrics = [
 ]
 
 
-price_metrics = [
-    "Current Market Price",
-    "Price to Earning",
-    "Price to book value",
-    "Dividend yield",
-    "Industry PE",
-    "Industry PBV",
-    "Earnings yield",
-    "Graham Number"
-]
-
-
-# =========================
-# GALLERY MAPPING
-# =========================
-
 gallery_map = {
-    "Market Capitalization": "Market Cap",
     "Price to Earning": "P/E",
     "Price to book value": "P/B",
     "Return on equity": "ROE",
     "Return on capital employed": "ROCE",
     "Dividend yield": "Dividend Yield",
-    "Industry PBV": "Industry PBV",
 }
 
 
-def show_gallery_metrics(metrics, prefix):
-
-    cols = st.columns(4)
-
-    for i, metric in enumerate(metrics):
-
-        with cols[i % 4]:
-
-            if st.button(
-                metric,
-                key=f"{prefix}_{i}",
-                use_container_width=True
-            ):
-
-                if metric in gallery_map:
-
-                    st.session_state.selected_field = gallery_map[
-                        metric
-                    ]
-
-                    st.toast(
-                        f"Selected: {metric}",
-                        icon="✅"
-                    )
-
-                else:
-
-                    st.toast(
-                        f"{metric} isn't available in fundamentals.csv yet.",
-                        icon="⚠️"
-                    )
-
-                st.rerun()
+cols = st.columns(4)
 
 
-# =========================
-# SHOW GALLERY
-# =========================
+for i, metric in enumerate(
+    ratios_metrics
+):
 
-with gallery_tabs[0]:
+    with cols[
+        i % 4
+    ]:
 
-    show_gallery_metrics(
-        recent_metrics,
-        "recent"
-    )
+        if st.button(
+            metric,
+            key=f"ratio_{i}",
+            use_container_width=True
+        ):
 
+            if metric in gallery_map:
 
-with gallery_tabs[1]:
+                st.session_state.selected_field = (
+                    gallery_map[metric]
+                )
 
-    show_gallery_metrics(
-        balance_sheet_metrics,
-        "balance"
-    )
+                st.toast(
+                    f"Selected: {metric}",
+                    icon="✅"
+                )
 
+            else:
 
-with gallery_tabs[2]:
+                st.toast(
+                    f"{metric} isn't available in fundamentals.csv yet.",
+                    icon="⚠️"
+                )
 
-    show_gallery_metrics(
-        cash_flow_metrics,
-        "cashflow"
-    )
-
-
-with gallery_tabs[3]:
-
-    show_gallery_metrics(
-        ratios_metrics,
-        "ratios"
-    )
-
-
-with gallery_tabs[4]:
-
-    show_gallery_metrics(
-        price_metrics,
-        "price"
-    )
+            st.rerun()
