@@ -1,4 +1,4 @@
-name: Update NSE Data 
+name: Update NSE Data
 
 on:
   schedule:
@@ -13,10 +13,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
     - name: Checkout
       uses: actions/checkout@v4
       with:
-        ref: main  # ← Added this to explicitly checkout the main branch
+        ref: main
 
     - name: Setup Python
       uses: actions/setup-python@v5
@@ -39,13 +40,13 @@ jobs:
       run: |
         python update_nifty200.py
 
-    - name: Update Nifty Indices
-      run: |
-        python update_nifty_indices.py
-
     - name: Update NIFTY 500 list
       run: |
         python update_nifty500.py
+
+    - name: Update Nifty Indices
+      run: |
+        python update_nifty_indices.py
 
     - name: Commit updated CSV
       run: |

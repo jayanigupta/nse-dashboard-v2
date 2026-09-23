@@ -9,7 +9,6 @@ from pandas.tseries.offsets import BDay
 # -----------------------------------
 
 URL = "https://nsearchives.nseindia.com/content/indices/ind_nifty500list.csv"
-
 OUTPUT_FILE = Path(__file__).resolve().parent / "nifty500.csv"
 
 
@@ -85,6 +84,6 @@ if missing:
 # Save exactly where your dashboard expects it
 new_data.to_csv(OUTPUT_FILE, index=False)
 
-print(f"NIFTY 500 updated successfully.")
+print("NIFTY 500 updated successfully.")
 print(f"Stocks: {len(new_data)}")
 print(f"File: {OUTPUT_FILE}")
