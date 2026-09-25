@@ -45,69 +45,37 @@ industry_df.columns = (
 
 
 # =========================
-# CLEAN COMPANY NAMES
-# =========================
-
-def clean_company_name(name):
-
-    if pd.isna(name):
-        return ""
-
-    name = str(name).upper().strip()
-
-    for suffix in [
-        " LIMITED",
-        " LTD.",
-        " LTD",
-        " LIMITED.",
-        " PVT. LTD.",
-        " PVT LTD",
-        " PRIVATE LIMITED"
-    ]:
-
-        if name.endswith(suffix):
-            name = name[:-len(suffix)]
-
-    return name.strip()
-
-
-df["_CompanyMatch"] = df["Company"].apply(
-    clean_company_name
-)
-
-industry_df["_CompanyMatch"] = industry_df["Company Name"].apply(
-    clean_company_name
-)
-
-
-# =========================
 # ADD INDUSTRY
 # =========================
 
 industry_mapping = (
     industry_df[
-        ["_CompanyMatch", "Symbol", "Industry"]
+        ["Symbol", "Industry"]
     ]
-    .drop_duplicates("_CompanyMatch")
+    .drop_duplicates("Symbol")
+)
+
+df["Symbol"] = (
+    df["Symbol"]
+    .fillna("")
+    .astype(str)
+    .str.strip()
+    .str.upper()
+)
+
+industry_mapping["Symbol"] = (
+    industry_mapping["Symbol"]
+    .fillna("")
+    .astype(str)
+    .str.strip()
+    .str.upper()
 )
 
 df = df.merge(
     industry_mapping,
-    on="_CompanyMatch",
+    on="Symbol",
     how="left"
 )
-
-df.drop(
-    columns=["_CompanyMatch"],
-    inplace=True
-)
-
-df.columns = (
-    df.columns
-    .str.strip()
-    .str.replace(r"\s+", " ", regex=True)
-)
-
 
 # =========================
 # FILTER OPTIONS
@@ -124,7 +92,6 @@ field_aliases = {
 }
 
 display_fields = list(field_aliases.keys())
-
 
 # =========================
 # SESSION STATE
