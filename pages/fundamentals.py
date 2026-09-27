@@ -143,6 +143,9 @@ display_fields = list(field_aliases.keys())
 # SESSION STATE
 # =========================
 
+if "clear_filters_requested" not in st.session_state:
+    st.session_state.clear_filters_requested = False
+
 if "filters" not in st.session_state:
     st.session_state.filters = []
 
@@ -155,11 +158,24 @@ if "screen_result" not in st.session_state:
 if "group_by" not in st.session_state:
     st.session_state.group_by = "No Grouping"
 
-if "peer_selected_metrics" not in st.session_state:
-    st.session_state.peer_selected_metrics = []
+if "industry_selected_metrics" not in st.session_state:
+    st.session_state.industry_selected_metrics = []
 
-if "peer_selected_stats" not in st.session_state:
-    st.session_state.peer_selected_stats = ["Value"]
+if "industry_selected_statistics" not in st.session_state:
+    st.session_state.industry_selected_statistics = []
+
+if "industry_company_selection" not in st.session_state:
+    st.session_state.industry_company_selection = "None"
+
+if "industry_explorer_selection" not in st.session_state:
+    st.session_state.industry_explorer_selection = "All Industries"
+
+if "selected_daily_stats" not in st.session_state:
+    st.session_state.selected_daily_stats = [
+        "Value",
+        "Median",
+        "vs Median"
+    ]
 
 
 # =========================
@@ -175,12 +191,41 @@ col1, col2, col3, col4 = st.columns(
 
 with col1:
 
+    # =========================
+    # RESET FILTER WIDGETS
+    # =========================
+
+    if st.session_state.clear_filters_requested:
+
+        st.session_state.filters = []
+        st.session_state.screen_result = None
+
+        st.session_state.selected_field = "P/E"
+        st.session_state.filter_operator = ">"
+        st.session_state.filter_value = 0.0
+
+        st.session_state.group_by = "No Grouping"
+
+        st.session_state.industry_company_selection = "None"
+        st.session_state.industry_explorer_selection = "All Industries"
+        st.session_state.industry_selected_metrics = []
+        st.session_state.industry_selected_statistics = []
+
+        st.session_state.selected_daily_stats = [
+            "Value",
+            "Median",
+            "vs Median"
+        ]
+
+        st.session_state.clear_filters_requested = False
+
     selected_field = st.selectbox(
         "Metric",
         display_fields,
         index=display_fields.index(
             st.session_state.selected_field
-        )
+        ),
+        key="filter_metric"
     )
 
 
@@ -188,16 +233,17 @@ with col2:
 
     selected_operator = st.selectbox(
         "Condition",
-        [">", "<", ">=", "<=", "=", "!="]
+        [">", "<", ">=", "<=", "=", "!="],
+        key="filter_operator"
     )
 
 
 with col3:
-
     selected_value = st.number_input(
         "Value",
         value=0.0,
-        step=1.0
+        step=1.0,
+        key="filter_value"
     )
 
 
@@ -305,15 +351,9 @@ with col_clear:
 
 if clear_filters:
 
-    st.session_state.filters = []
-    st.session_state.selected_field = "P/E"
-    st.session_state.screen_result = None
-
-    st.session_state.peer_selected_metrics = []
-    st.session_state.peer_selected_stats = ["Value"]
+    st.session_state.clear_filters_requested = True
 
     st.rerun()
-
 
 # =========================
 # RUN FILTERS
