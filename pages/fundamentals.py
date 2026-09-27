@@ -1539,11 +1539,123 @@ if st.session_state.screen_result is not None:
                 )
 
             # =================================================
+            # COLOR MAIN PEER TABLE
+            # =================================================
+
+            def highlight_peer_table(column):
+
+                styles = pd.Series(
+                    "",
+                    index=column.index
+                )
+
+                column_name = column.name
+
+                # ---------------------------------------------
+                # Metrics where HIGHER is better
+                # ---------------------------------------------
+
+                higher_metrics = {
+                    "ROE",
+                    "ROCE",
+                    "Dividend Yield",
+                    "Div Yield"
+                }
+
+                # ---------------------------------------------
+                # Metrics where LOWER is better
+                # ---------------------------------------------
+
+                lower_metrics = {
+                    "P/B",
+                    "CMP / BV"
+                }
+
+                # ---------------------------------------------
+                # Don't color statistics columns
+                # ---------------------------------------------
+
+                if column_name in higher_metrics:
+
+                    values = pd.to_numeric(
+                        column,
+                        errors="coerce"
+                    )
+
+                    valid_values = values.dropna()
+
+                    if len(valid_values) > 0:
+
+                        mean_value = valid_values.mean()
+
+                        for index, value in values.items():
+
+                            if pd.isna(value):
+                                continue
+
+                            if value > mean_value:
+
+                                styles.loc[index] = (
+                                    "color: green; "
+                                    "font-weight: bold"
+                                )
+
+                            elif value < mean_value:
+
+                                styles.loc[index] = (
+                                    "color: red; "
+                                    "font-weight: bold"
+                                )
+
+                elif column_name in lower_metrics:
+
+                    values = pd.to_numeric(
+                        column,
+                        errors="coerce"
+                    )
+
+                    valid_values = values.dropna()
+
+                    if len(valid_values) > 0:
+
+                        mean_value = valid_values.mean()
+
+                        for index, value in values.items():
+
+                            if pd.isna(value):
+                                continue
+
+                            if value < mean_value:
+
+                                styles.loc[index] = (
+                                    "color: green; "
+                                    "font-weight: bold"
+                                )
+
+                            elif value > mean_value:
+
+                                styles.loc[index] = (
+                                    "color: red; "
+                                    "font-weight: bold"
+                                )
+
+                return styles
+
+
+            # =================================================
             # SHOW MAIN TABLE
             # =================================================
 
+            styled_peer_table = (
+                display_table.style
+                .apply(
+                    highlight_peer_table,
+                    axis=0
+                )
+            )
+
             st.dataframe(
-                display_table,
+                styled_peer_table,
                 use_container_width=True,
                 hide_index=True
             )
