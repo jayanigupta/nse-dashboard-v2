@@ -2,7 +2,7 @@ name: Update Fundamentals
 
 on:
   schedule:
-    - cron: '30 13 * * 1'
+    - cron: '30 13 * * 1-5'
   workflow_dispatch:
 
 permissions:
@@ -34,8 +34,8 @@ jobs:
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
 
-        git add fundamentals.csv
+        git add fundamentals.csv fundamentals.csv.backup marketlens.csv
 
-        git commit -m "Weekly fundamentals update" || echo "No changes"
+        git commit -m "Update fundamentals data" || echo "No changes"
 
         git push
