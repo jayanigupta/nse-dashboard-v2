@@ -930,6 +930,75 @@ def normalize_screen_row(row):
 
     }
 
+def fetch_missing_pb_from_screener(symbol):
+
+    if not symbol:
+        return None
+
+    url = f"https://www.screener.in/company/{symbol}/"
+
+    try:
+
+        response = requests.get(
+            url,
+            headers=session.headers,
+            timeout=20
+        )
+
+        if response.status_code != 200:
+            return None
+
+        soup = BeautifulSoup(
+            response.text,
+            "html.parser"
+        )
+
+        top_ratios = soup.select_one(
+            "#top-ratios"
+        )
+
+        if not top_ratios:
+            return None
+
+        text = top_ratios.get_text(
+            " ",
+            strip=True
+        )
+
+        price_match = re.search(
+            r"Current Price\s*₹?\s*([\d,]+(?:\.\d+)?)",
+            text
+        )
+
+        book_match = re.search(
+            r"Book Value\s*₹?\s*([\d,]+(?:\.\d+)?)",
+            text
+        )
+
+        if not price_match or not book_match:
+            return None
+
+        current_price = float(
+            price_match.group(1).replace(",", "")
+        )
+
+        book_value = float(
+            book_match.group(1).replace(",", "")
+        )
+
+        if book_value == 0:
+            return None
+
+        pb = current_price / book_value
+        return pb
+
+    except Exception as e:
+
+        print(
+            f"P/B fetch error for {symbol}: {e}"
+        )
+
+        return None
 
 # ============================================================
 # APPLY SCREENER DATA
@@ -1013,6 +1082,71 @@ print(
 print(
     f"Cells updated: "
     f"{screener_cells_updated}"
+)
+
+
+# ============================================================
+# RETRY MISSING P/B VALUES
+#
+# Only companies still missing CMP / BV are fetched
+# individually from their Screener company page.
+# ============================================================
+
+missing_pb_mask = pd.to_numeric(
+    current["CMP / BV"],
+    errors="coerce"
+).isna()
+
+missing_pb = current[
+    missing_pb_mask
+].copy()
+
+print()
+print(
+    f"Missing P/B values before retry: "
+    f"{len(missing_pb)}"
+)
+
+pb_recovered = 0
+
+for index, row in missing_pb.iterrows():
+
+    symbol = normalize_symbol(
+        row["Symbol"]
+    )
+
+    if not symbol:
+        continue
+
+    pb_value = fetch_missing_pb_from_screener(
+        symbol
+    )
+
+    if pb_value is not None:
+
+        current.at[
+            index,
+            "CMP / BV"
+        ] = pb_value
+
+        pb_recovered += 1
+
+        print(
+            f"P/B recovered: "
+            f"{symbol} -> {pb_value}"
+        )
+
+    else:
+
+        print(
+            f"P/B still unavailable: "
+            f"{symbol}"
+        )
+
+print()
+print(
+    f"P/B values recovered: "
+    f"{pb_recovered}"
 )
 
 
