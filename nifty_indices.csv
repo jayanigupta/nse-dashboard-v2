@@ -1,6 +1,6 @@
 Symbol,Company Name,Nifty 50,Nifty 100,Nifty Total Market,Nifty Midcap 150,Nifty Midcap 100,Nifty Smallcap 250,Nifty Smallcap 500
 360ONE,360 ONE WAM Ltd.,No,No,Yes,Yes,Yes,No,No
-3MINDIA,3M India Ltd.,No,No,Yes,No,No,No,Yes
+3MINDIA,3M India Ltd.,No,No,No,No,No,No,Yes
 AADHARHFC,Aadhar Housing Finance Ltd.,No,No,Yes,No,No,Yes,Yes
 AARTIIND,Aarti Industries Ltd.,No,No,Yes,No,No,Yes,Yes
 AARTIPHARM,Aarti Pharmalabs Ltd.,No,No,Yes,No,No,No,Yes
@@ -28,7 +28,7 @@ AEGISLOG,Aegis Logistics Ltd.,No,No,Yes,No,No,Yes,Yes
 AEGISVOPAK,Aegis Vopak Terminals Ltd.,No,No,Yes,No,No,Yes,Yes
 AEQUS,Aequs Ltd.,No,No,Yes,No,No,No,Yes
 AEROFLEX,Aeroflex Industries Ltd.,No,No,Yes,No,No,No,No
-AETHER,Aether Industries Ltd.,No,No,No,No,No,Yes,Yes
+AETHER,Aether Industries Ltd.,No,No,Yes,No,No,Yes,Yes
 AFCONS,Afcons Infrastructure Ltd.,No,No,Yes,No,No,Yes,Yes
 AFFLE,Affle 3i Ltd.,No,No,Yes,No,No,Yes,Yes
 AIAENG,AIA Engineering Ltd.,No,No,Yes,Yes,No,No,No
@@ -70,13 +70,13 @@ AUBANK,AU Small Finance Bank Ltd.,No,No,Yes,Yes,Yes,No,No
 AURIONPRO,Aurionpro Solution Ltd.,No,No,Yes,No,No,No,Yes
 AUROPHARMA,Aurobindo Pharma Ltd.,No,No,Yes,Yes,Yes,No,No
 AVALON,Avalon Technologies Ltd.,No,No,Yes,No,No,No,Yes
-AVANTIFEED,Avanti Feeds Ltd.,No,No,No,No,No,Yes,Yes
+AVANTIFEED,Avanti Feeds Ltd.,No,No,Yes,No,No,Yes,Yes
 AVL,Aditya Vision Ltd.,No,No,Yes,No,No,No,Yes
 AWL,AWL Agri Business Ltd.,No,No,Yes,No,No,Yes,Yes
 AXISBANK,Axis Bank Ltd.,Yes,Yes,Yes,No,No,No,No
 AXISCADES,AXISCADES Technologies Ltd.,No,No,Yes,No,No,No,Yes
-AZAD,Azad Engineering Ltd.,No,No,No,No,No,Yes,Yes
-BAGMANE,Bagmane Prime Office REIT,No,No,No,No,No,Yes,Yes
+AZAD,Azad Engineering Ltd.,No,No,Yes,No,No,Yes,Yes
+BAGMANE,Bagmane Prime Office REIT,No,No,Yes,No,No,Yes,Yes
 BAJAJ-AUTO,Bajaj Auto Ltd.,Yes,Yes,Yes,No,No,No,No
 BAJAJCON,Bajaj Consumer Care Ltd.,No,No,Yes,No,No,No,Yes
 BAJAJFINSV,Bajaj Finserv Ltd.,Yes,Yes,Yes,No,No,No,No
@@ -92,27 +92,24 @@ BANDHANBNK,Bandhan Bank Ltd.,No,No,Yes,No,No,Yes,Yes
 BANKBARODA,Bank of Baroda,No,Yes,Yes,No,No,No,No
 BANKINDIA,Bank of India,No,No,Yes,Yes,Yes,No,No
 BATAINDIA,Bata India Ltd.,No,No,Yes,No,No,Yes,Yes
-BAYERCROP,Bayer Cropscience Ltd.,No,No,Yes,No,No,No,Yes
-BBOX,Black Box Ltd.,No,No,No,No,No,Yes,Yes
-BBTC,,No,No,Yes,No,No,No,No
+BAYERCROP,Bayer Cropscience Ltd.,No,No,No,No,No,No,Yes
+BBOX,Black Box Ltd.,No,No,Yes,No,No,Yes,Yes
 BDL,Bharat Dynamics Ltd.,No,No,Yes,Yes,Yes,No,No
 BECTORFOOD,Mrs. Bectors Food Specialities Ltd.,No,No,Yes,No,No,No,Yes
 BEL,Bharat Electronics Ltd.,Yes,Yes,Yes,No,No,No,No
 BELRISE,Belrise Industries Ltd.,No,No,Yes,No,No,Yes,Yes
 BEML,BEML Ltd.,No,No,Yes,No,No,Yes,Yes
 BERGEPAINT,Berger Paints India Ltd.,No,No,Yes,Yes,No,No,No
-BHARATCOAL,Bharat Coking Coal Ltd.,No,No,No,No,No,Yes,Yes
+BHARATCOAL,Bharat Coking Coal Ltd.,No,No,Yes,No,No,Yes,Yes
 BHARATFORG,Bharat Forge Ltd.,No,No,Yes,Yes,Yes,No,No
 BHARTIARTL,Bharti Airtel Ltd.,Yes,Yes,Yes,No,No,No,No
 BHARTIHEXA,Bharti Hexacom Ltd.,No,No,Yes,Yes,No,No,No
 BHEL,Bharat Heavy Electricals Ltd.,No,No,Yes,Yes,Yes,No,No
-BIKAJI,,No,No,Yes,No,No,No,No
 BIOCON,Biocon Ltd.,No,No,Yes,Yes,Yes,No,No
-BIRET,Brookfield India Real Estate Trust,No,No,No,No,No,Yes,Yes
+BIRET,Brookfield India Real Estate Trust,No,No,Yes,No,No,Yes,Yes
 BIRLACORPN,Birla Corporation Ltd.,No,No,Yes,No,No,No,Yes
 BLACKBUCK,Blackbuck Ltd.,No,No,Yes,No,No,No,Yes
 BLS,BLS International Services Ltd.,No,No,Yes,No,No,Yes,Yes
-BLUEDART,,No,No,Yes,No,No,No,No
 BLUEJET,Blue Jet Healthcare Ltd.,No,No,Yes,No,No,No,Yes
 BLUESTARCO,Blue Star Ltd.,No,No,Yes,Yes,Yes,No,No
 BLUESTONE,BlueStone Jewellery and Lifestyle Ltd.,No,No,Yes,No,No,No,Yes
@@ -155,8 +152,8 @@ CHOLAHLDNG,Cholamandalam Financial Holdings Ltd.,No,No,Yes,No,No,Yes,Yes
 CIEINDIA,CIE Automotive India Ltd.,No,No,Yes,No,No,Yes,Yes
 CIPLA,Cipla Ltd.,Yes,Yes,Yes,No,No,No,No
 CLEAN,Clean Science and Technology Ltd.,No,No,Yes,No,No,Yes,Yes
-CLEANMAX,Clean Max Enviro Energy Solutions Ltd.,No,No,No,No,No,Yes,Yes
-CMPDI,Central Mine Planning & Design Institute Ltd.,No,No,No,No,No,Yes,Yes
+CLEANMAX,Clean Max Enviro Energy Solutions Ltd.,No,No,Yes,No,No,Yes,Yes
+CMPDI,Central Mine Planning & Design Institute Ltd.,No,No,Yes,No,No,Yes,Yes
 CMRGREEN,CMR Green Technologies Ltd.,No,No,Yes,No,No,No,Yes
 CMSINFO,CMS Info Systems Ltd.,No,No,Yes,No,No,No,Yes
 COALINDIA,Coal India Ltd.,Yes,Yes,Yes,No,No,No,No
@@ -176,7 +173,7 @@ CROMPTON,Crompton Greaves Consumer Electricals Ltd.,No,No,Yes,No,No,Yes,Yes
 CSBBANK,CSB Bank Ltd.,No,No,Yes,No,No,No,Yes
 CUB,City Union Bank Ltd.,No,No,Yes,No,No,Yes,Yes
 CUMMINSIND,Cummins India Ltd.,No,Yes,Yes,No,No,No,No
-CUPID,Cupid Ltd.,No,No,No,No,No,Yes,Yes
+CUPID,Cupid Ltd.,No,No,Yes,No,No,Yes,Yes
 CYIENT,Cyient Ltd.,No,No,Yes,No,No,Yes,Yes
 DABUR,Dabur India Ltd.,No,No,Yes,Yes,Yes,No,No
 DALBHARAT,Dalmia Bharat Ltd.,No,No,Yes,Yes,No,No,No
@@ -185,7 +182,6 @@ DATAPATTNS,Data Patterns (India) Ltd.,No,No,Yes,No,No,Yes,Yes
 DBL,Dilip Buildcon Ltd.,No,No,Yes,No,No,No,Yes
 DBREALTY,VALOR ESTATE Ltd.,No,No,Yes,No,No,No,Yes
 DCBBANK,DCB Bank Ltd.,No,No,Yes,No,No,No,Yes
-DCMSHRIRAM,,No,No,Yes,No,No,No,No
 DEEPAKFERT,Deepak Fertilisers & Petrochemicals Corp. Ltd.,No,No,Yes,No,No,Yes,Yes
 DEEPAKNTR,Deepak Nitrite Ltd.,No,No,Yes,No,No,Yes,Yes
 DELHIVERY,Delhivery Ltd.,No,No,Yes,No,No,Yes,Yes
@@ -197,7 +193,7 @@ DLF,DLF Ltd.,No,Yes,Yes,No,No,No,No
 DMART,Avenue Supermarts Ltd.,No,Yes,Yes,No,No,No,No
 DOMS,DOMS Industries Ltd.,No,No,Yes,No,No,Yes,Yes
 DRREDDY,Dr. Reddy's Laboratories Ltd.,Yes,Yes,Yes,No,No,No,No
-DUMMYHEG,Dummy HEG Ltd.,No,No,No,No,No,Yes,Yes
+DUMMYHEG,Dummy HEG Ltd.,No,No,Yes,No,No,Yes,Yes
 DUMMYINGL1,Dummy India Glycols ltd. 1,No,No,Yes,No,No,No,Yes
 DUMMYINGL2,Dummy India Glycols ltd. 2,No,No,Yes,No,No,No,Yes
 DUMMYINXGN,Dummy Inox Green Ltd.,No,No,Yes,No,No,No,Yes
@@ -216,7 +212,7 @@ ELECTCAST,Electrosteel Castings Ltd.,No,No,Yes,No,No,No,Yes
 ELGIEQUIP,Elgi Equipments Ltd.,No,No,Yes,No,No,Yes,Yes
 ELLEN,Ellenbarrie Industrial Gases Ltd.,No,No,Yes,No,No,No,Yes
 EMAMILTD,Emami Ltd.,No,No,Yes,No,No,Yes,Yes
-EMBASSY,EMBASSY OFFICE PARKS REIT,No,No,No,Yes,No,No,No
+EMBASSY,EMBASSY OFFICE PARKS REIT,No,No,Yes,Yes,No,No,No
 EMBDL,Embassy Developments Ltd.,No,No,Yes,No,No,No,Yes
 EMCURE,Emcure Pharmaceuticals Ltd.,No,No,Yes,No,No,Yes,Yes
 EMIL,Electronics Mart India Ltd.,No,No,Yes,No,No,No,Yes
@@ -242,7 +238,7 @@ FIVESTAR,Five-Star Business Finance Ltd.,No,No,Yes,No,No,Yes,Yes
 FLUOROCHEM,Gujarat Fluorochemicals Ltd.,No,No,Yes,Yes,No,No,No
 FORCEMOT,Force Motors Ltd.,No,No,Yes,No,No,Yes,Yes
 FORTIS,Fortis Healthcare Ltd.,No,No,Yes,Yes,Yes,No,No
-FRACTAL,Fractal Analytics Ltd.,No,No,No,No,No,Yes,Yes
+FRACTAL,Fractal Analytics Ltd.,No,No,Yes,No,No,Yes,Yes
 FSL,Firstsource Solutions Ltd.,No,No,Yes,No,No,Yes,Yes
 GABRIEL,Gabriel India Ltd.,No,No,Yes,No,No,Yes,Yes
 GAEL,Gujarat Ambuja Exports Ltd.,No,No,Yes,No,No,No,Yes
@@ -260,7 +256,7 @@ GMRAIRPORT,GMR Airports Ltd.,No,No,Yes,Yes,Yes,No,No
 GMRP&UI,GMR Power and Urban Infra Ltd.,No,No,Yes,No,No,No,Yes
 GNFC,Gujarat Narmada Valley Fertilizers and Chemicals Ltd.,No,No,Yes,No,No,No,Yes
 GODFRYPHLP,Godfrey Phillips India Ltd.,No,No,Yes,Yes,Yes,No,No
-GODIGIT,Go Digit General Insurance Ltd.,No,No,Yes,No,No,No,Yes
+GODIGIT,Go Digit General Insurance Ltd.,No,No,No,No,No,No,Yes
 GODREJAGRO,Godrej Agrovet Ltd.,No,No,Yes,No,No,No,Yes
 GODREJCP,Godrej Consumer Products Ltd.,No,Yes,Yes,No,No,No,No
 GODREJIND,Godrej Industries Ltd.,No,No,Yes,Yes,No,No,No
@@ -294,8 +290,7 @@ HDBFS,HDB Financial Services Ltd.,No,No,Yes,Yes,No,No,No
 HDFCAMC,HDFC Asset Management Company Ltd.,No,Yes,Yes,No,No,No,No
 HDFCBANK,HDFC Bank Ltd.,Yes,Yes,Yes,No,No,No,No
 HDFCLIFE,HDFC Life Insurance Company Ltd.,Yes,Yes,Yes,No,No,No,No
-HEG,,No,No,Yes,No,No,No,No
-HEGAM,HEG Advanced Materials Ltd.,No,No,No,No,No,Yes,Yes
+HEGAM,HEG Advanced Materials Ltd.,No,No,Yes,No,No,Yes,Yes
 HERITGFOOD,Heritage Foods Ltd.,No,No,Yes,No,No,No,Yes
 HEROMOTOCO,Hero MotoCorp Ltd.,No,No,Yes,Yes,Yes,No,No
 HEXT,Hexaware Technologies Ltd.,No,No,Yes,Yes,No,No,No
@@ -340,7 +335,7 @@ INDIGOPNTS,Indigo Paints Ltd.,No,No,Yes,No,No,No,Yes
 INDUSINDBK,IndusInd Bank Ltd.,No,No,Yes,Yes,Yes,No,No
 INDUSTOWER,Indus Towers Ltd.,No,No,Yes,Yes,Yes,No,No
 INFY,Infosys Ltd.,Yes,Yes,Yes,No,No,No,No
-INOXINDIA,INOX India Ltd.,No,No,No,No,No,Yes,Yes
+INOXINDIA,INOX India Ltd.,No,No,Yes,No,No,Yes,Yes
 INOXWIND,Inox Wind Ltd.,No,No,Yes,No,No,Yes,Yes
 INTELLECT,Intellect Design Arena Ltd.,No,No,Yes,No,No,Yes,Yes
 IOB,Indian Overseas Bank,No,No,Yes,Yes,No,No,No
@@ -361,7 +356,6 @@ JAIBALAJI,JAI BALAJI INDUSTRIES Ltd.,No,No,Yes,No,No,No,Yes
 JAINREC,Jain Resource Recycling Ltd.,No,No,Yes,No,No,Yes,Yes
 JAMNAAUTO,Jamna Auto Industries Ltd.,No,No,Yes,No,No,No,Yes
 JAYNECOIND,Jayaswal Neco Industries Ltd.,No,No,Yes,No,No,No,Yes
-JBCHEPHARM,,No,No,Yes,No,No,No,No
 JBMA,JBM Auto Ltd.,No,No,Yes,No,No,Yes,Yes
 JINDALSAW,Jindal Saw Ltd.,No,No,Yes,No,No,Yes,Yes
 JINDALSTEL,Jindal Steel Ltd.,No,Yes,Yes,No,No,No,No
@@ -375,7 +369,6 @@ JSFB,Jana Small Finance Bank Ltd.,No,No,Yes,No,No,No,Yes
 JSL,Jindal Stainless Ltd.,No,No,Yes,Yes,No,No,No
 JSLL,Jeena Sikho Lifecare Ltd.,No,No,Yes,No,No,No,Yes
 JSWCEMENT,JSW Cement Ltd.,No,No,Yes,No,No,Yes,Yes
-JSWDULUX,,No,No,Yes,No,No,No,No
 JSWENERGY,JSW Energy Ltd.,No,No,Yes,Yes,Yes,No,No
 JSWINFRA,JSW Infrastructure Ltd.,No,No,Yes,Yes,No,No,No
 JSWSTEEL,JSW Steel Ltd.,Yes,Yes,Yes,No,No,No,No
@@ -395,7 +388,7 @@ KEC,Kec International Ltd.,No,No,Yes,No,No,Yes,Yes
 KEI,KEI Industries Ltd.,No,No,Yes,Yes,Yes,No,No
 KFINTECH,Kfin Technologies Ltd.,No,No,Yes,No,No,Yes,Yes
 KIMS,Krishna Institute of Medical Sciences Ltd.,No,No,Yes,No,No,Yes,Yes
-KIRLOSBROS,Kirloskar Brothers Ltd.,No,No,No,No,No,Yes,Yes
+KIRLOSBROS,Kirloskar Brothers Ltd.,No,No,Yes,No,No,Yes,Yes
 KIRLOSENG,Kirloskar Oil Eng Ltd.,No,No,Yes,No,No,Yes,Yes
 KIRLPNU,Kirloskar Pneumatic Company Ltd.,No,No,Yes,No,No,No,Yes
 KISSHT,OnEMI Technology Solutions Ltd.,No,No,Yes,No,No,No,Yes
@@ -409,7 +402,7 @@ KPITTECH,KPIT Technologies Ltd.,No,No,Yes,No,No,Yes,Yes
 KPRMILL,K.P.R. Mill Ltd.,No,No,Yes,Yes,No,No,No
 KRBL,KRBL Ltd.,No,No,Yes,No,No,No,Yes
 KRN,KRN HEAT EXCHANGER AND REFRIGERATION Ltd.,No,No,Yes,No,No,No,Yes
-KSB,KSB Ltd.,No,No,No,No,No,Yes,Yes
+KSB,KSB Ltd.,No,No,Yes,No,No,Yes,Yes
 KSCL,Kaveri Seed Company Ltd.,No,No,Yes,No,No,No,Yes
 KTKBANK,Karnataka Bank Ltd.,No,No,Yes,No,No,No,Yes
 KWIL,Kwality Wall's (India) Ltd.,No,No,Yes,No,No,No,Yes
@@ -470,7 +463,7 @@ MRF,MRF Ltd.,No,No,Yes,Yes,Yes,No,No
 MRPL,Mangalore Refinery & Petrochemicals Ltd.,No,No,Yes,No,No,Yes,Yes
 MSTCLTD,MSTC Ltd.,No,No,Yes,No,No,No,Yes
 MSUMI,Motherson Sumi Wiring India Ltd.,No,No,Yes,No,No,Yes,Yes
-MTARTECH,MTAR Technologies Ltd.,No,No,No,No,No,Yes,Yes
+MTARTECH,MTAR Technologies Ltd.,No,No,Yes,No,No,Yes,Yes
 MUTHOOTFIN,Muthoot Finance Ltd.,No,Yes,Yes,No,No,No,No
 NAM-INDIA,Nippon Life India Asset Management Ltd.,No,No,Yes,Yes,No,No,No
 NATCOPHARM,NATCO Pharma Ltd.,No,No,Yes,No,No,Yes,Yes
@@ -524,8 +517,8 @@ PDSL,PDS Ltd.,No,No,Yes,No,No,No,No
 PERSISTENT,Persistent Systems Ltd.,No,No,Yes,Yes,Yes,No,No
 PETRONET,Petronet LNG Ltd.,No,No,Yes,Yes,No,No,No
 PFC,Power Finance Corporation Ltd.,No,Yes,Yes,No,No,No,No
-PFIZER,Pfizer Ltd.,No,No,Yes,No,No,No,Yes
-PFOCUS,Prime Focus Ltd.,No,No,No,No,No,Yes,Yes
+PFIZER,Pfizer Ltd.,No,No,No,No,No,No,Yes
+PFOCUS,Prime Focus Ltd.,No,No,Yes,No,No,Yes,Yes
 PGEL,PG Electroplast Ltd.,No,No,Yes,No,No,Yes,Yes
 PGHH,Procter & Gamble Hygiene & Health Care Ltd.,No,No,No,No,No,No,Yes
 PGHL,Procter & Gamble Health Ltd.,No,No,Yes,No,No,No,Yes
@@ -554,7 +547,7 @@ PRECWIRE,Precision Wires India Ltd.,No,No,Yes,No,No,No,Yes
 PREMIERENE,Premier Energies Ltd.,No,No,Yes,Yes,Yes,No,No
 PRESTIGE,Prestige Estates Projects Ltd.,No,No,Yes,Yes,Yes,No,No
 PRICOLLTD,Pricol Ltd.,No,No,Yes,No,No,No,Yes
-PRIVISCL,Privi Speciality Chemicals Ltd.,No,No,No,No,No,Yes,Yes
+PRIVISCL,Privi Speciality Chemicals Ltd.,No,No,Yes,No,No,Yes,Yes
 PTC,PTC India Ltd.,No,No,Yes,No,No,No,Yes
 PTCIL,PTC Industries Ltd.,No,No,Yes,No,No,Yes,Yes
 PURVA,Puravankara Ltd.,No,No,Yes,No,No,No,Yes
@@ -592,7 +585,7 @@ RPOWER,Reliance Power Ltd.,No,No,Yes,No,No,Yes,Yes
 RRKABEL,R R Kabel Ltd.,No,No,Yes,No,No,Yes,Yes
 RSYSTEMS,R Systems International Ltd.,No,No,No,No,No,No,Yes
 RTNPOWER,RattanIndia Power Ltd.,No,No,Yes,No,No,No,Yes
-RUBICON,Rubicon Research Ltd.,No,No,No,No,No,Yes,Yes
+RUBICON,Rubicon Research Ltd.,No,No,Yes,No,No,Yes,Yes
 RVNL,Rail Vikas Nigam Ltd.,No,No,Yes,Yes,Yes,No,No
 SAFARI,Safari Industries (India) Ltd.,No,No,Yes,No,No,No,Yes
 SAGILITY,Sagility Ltd.,No,No,Yes,No,No,Yes,Yes
@@ -601,7 +594,7 @@ SAILIFE,Sai Life Sciences Ltd.,No,No,Yes,No,No,Yes,Yes
 SAMHI,Samhi Hotels Ltd.,No,No,Yes,No,No,No,Yes
 SAMMAANCAP,Sammaan Capital Ltd.,No,No,Yes,No,No,Yes,Yes
 SANDUMA,Sandur Manganese & Iron Ores Ltd.,No,No,Yes,No,No,No,Yes
-SANSERA,Sansera Engineering Ltd.,No,No,No,No,No,Yes,Yes
+SANSERA,Sansera Engineering Ltd.,No,No,Yes,No,No,Yes,Yes
 SAPPHIRE,Sapphire Foods India Ltd.,No,No,Yes,No,No,No,Yes
 SARDAEN,Sarda Energy and Minerals Ltd.,No,No,Yes,No,No,Yes,Yes
 SAREGAMA,Saregama India Ltd,No,No,Yes,No,No,No,Yes
@@ -626,7 +619,7 @@ SHILCTECH,Shilchar Technologies Ltd.,No,No,Yes,No,No,No,Yes
 SHILPAMED,Shilpa Medicare Ltd.,No,No,Yes,No,No,No,Yes
 SHREECEM,Shree Cement Ltd.,No,No,Yes,Yes,No,No,No
 SHREEJISPG,Shreeji Shipping Global Ltd.,No,No,Yes,No,No,No,Yes
-SHRIPISTON,SPR Auto Technologies Ltd.,No,No,No,No,No,Yes,Yes
+SHRIPISTON,SPR Auto Technologies Ltd.,No,No,Yes,No,No,Yes,Yes
 SHRIRAMFIN,Shriram Finance Ltd.,Yes,Yes,Yes,No,No,No,No
 SHYAMMETL,Shyam Metalics and Energy Ltd.,No,No,Yes,No,No,Yes,Yes
 SIEMENS,Siemens Ltd.,No,Yes,Yes,No,No,No,No
@@ -647,7 +640,7 @@ SPLPETRO,Supreme Petrochem Ltd.,No,No,Yes,No,No,No,Yes
 SRF,SRF Ltd.,No,No,Yes,Yes,Yes,No,No
 STAR,Strides Pharma Science Ltd.,No,No,Yes,No,No,No,Yes
 STARHEALTH,Star Health and Allied Insurance Company Ltd.,No,No,Yes,No,No,Yes,Yes
-STLTECH,Sterlite Technologies Ltd.,No,No,No,No,No,Yes,Yes
+STLTECH,Sterlite Technologies Ltd.,No,No,Yes,No,No,Yes,Yes
 STYLAMIND,Stylam Industries Ltd.,No,No,Yes,No,No,No,Yes
 SUBROS,Subros Ltd.,No,No,Yes,No,No,No,Yes
 SUDARSCHEM,Sudarshan Chemical Industries Ltd.,No,No,Yes,No,No,No,Yes
@@ -683,14 +676,14 @@ TATASTEEL,Tata Steel Ltd.,Yes,Yes,Yes,No,No,No,No
 TATATECH,Tata Technologies Ltd.,No,No,Yes,No,No,Yes,Yes
 TBOTEK,TBO Tek Ltd.,No,No,Yes,No,No,Yes,Yes
 TCS,Tata Consultancy Services Ltd.,Yes,Yes,Yes,No,No,No,No
-TDPOWERSYS,TD Power Systems Ltd.,No,No,No,No,No,Yes,Yes
+TDPOWERSYS,TD Power Systems Ltd.,No,No,Yes,No,No,Yes,Yes
 TECHM,Tech Mahindra Ltd.,Yes,Yes,Yes,No,No,No,No
 TECHNOE,Techno Electric & Engineering Company Ltd.,No,No,Yes,No,No,Yes,Yes
 TEGA,Tega Industries Ltd.,No,No,Yes,No,No,Yes,Yes
 TEJASNET,Tejas Networks Ltd.,No,No,Yes,No,No,Yes,Yes
 TENNIND,Tenneco Clean Air India Ltd.,No,No,Yes,No,No,Yes,Yes
 TEXRAIL,Texmaco Rail & Eng. Ltd.,No,No,Yes,No,No,No,Yes
-THANGAMAYL,Thangamayil Jewellery Ltd.,No,No,No,No,No,Yes,Yes
+THANGAMAYL,Thangamayil Jewellery Ltd.,No,No,Yes,No,No,Yes,Yes
 THELEELA,Leela Palaces Hotels & Resorts Ltd.,No,No,Yes,No,No,No,Yes
 THERMAX,Thermax Ltd.,No,No,Yes,Yes,No,No,No
 THOMASCOOK,Thomas Cook (India) Ltd.,No,No,Yes,No,No,No,Yes
@@ -709,7 +702,6 @@ TMPV,Tata Motors Passenger Vehicles Ltd.,Yes,Yes,Yes,No,No,No,No
 TORNTPHARM,Torrent Pharmaceuticals Ltd.,No,Yes,Yes,No,No,No,No
 TORNTPOWER,Torrent Power Ltd.,No,No,Yes,Yes,No,No,No
 TRANSRAILL,Transrail Lighting Ltd.,No,No,Yes,No,No,No,Yes
-TRAVELFOOD,,No,No,Yes,No,No,No,No
 TRENT,Trent Ltd.,Yes,Yes,Yes,No,No,No,No
 TRIDENT,Trident Ltd.,No,No,Yes,No,No,Yes,Yes
 TRITURBINE,Triveni Turbine Ltd.,No,No,Yes,No,No,Yes,Yes
@@ -732,20 +724,20 @@ UTIAMC,UTI Asset Management Company Ltd.,No,No,Yes,No,No,Yes,Yes
 UTLSOLAR,Fujiyama Power Systems Ltd.,No,No,Yes,No,No,No,Yes
 V2RETAIL,V2 Retail Ltd.,No,No,Yes,No,No,No,Yes
 VAIBHAVGBL,Vaibhav Global Ltd.,No,No,Yes,No,No,No,Yes
-VAML,Vedanta Aluminium Metal Ltd.,No,Yes,No,No,No,No,No
+VAML,Vedanta Aluminium Metal Ltd.,No,Yes,Yes,No,No,No,No
 VBL,Varun Beverages Ltd.,No,Yes,Yes,No,No,No,No
 VEDL,Vedanta Ltd.,No,Yes,Yes,No,No,No,No
-VEDPOWER,Vedanta Power Ltd.,No,No,No,No,No,Yes,Yes
+VEDPOWER,Vedanta Power Ltd.,No,No,Yes,No,No,Yes,Yes
 VESUVIUS,Vesuvius India Ltd.,No,No,Yes,No,No,No,Yes
 VGUARD,V-Guard Industries Ltd.,No,No,Yes,No,No,No,Yes
 VIJAYA,Vijaya Diagnostic Centre Ltd.,No,No,Yes,No,No,Yes,Yes
 VIKRAMSOLR,Vikram Solar Ltd.,No,No,Yes,No,No,No,Yes
 VIPIND,V.I.P. Industries Ltd.,No,No,Yes,No,No,No,Yes
-VISL,Vedanta Iron and Steel Ltd.,No,No,No,No,No,Yes,Yes
+VISL,Vedanta Iron and Steel Ltd.,No,No,Yes,No,No,Yes,Yes
 VIYASH,Viyash Scientific Ltd.,No,No,Yes,No,No,No,Yes
 VMART,V-Mart Retail Ltd.,No,No,Yes,No,No,No,Yes
 VMM,Vishal Mega Mart Ltd.,No,No,Yes,Yes,Yes,No,No
-VOGL,Vedanta Oil and Gas Ltd.,No,No,No,No,No,Yes,Yes
+VOGL,Vedanta Oil and Gas Ltd.,No,No,Yes,No,No,Yes,Yes
 VOLTAMP,Voltamp Transformers Ltd,No,No,Yes,No,No,No,Yes
 VOLTAS,Voltas Ltd.,No,No,Yes,Yes,Yes,No,No
 VTL,Vardhman Textiles Ltd.,No,No,Yes,No,No,Yes,Yes
