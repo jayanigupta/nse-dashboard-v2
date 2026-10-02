@@ -23,7 +23,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install pandas requests lxml
+        pip install pandas requests lxml beautifulsoup4
 
     - name: Get Screener Fundamentals
       run: |
