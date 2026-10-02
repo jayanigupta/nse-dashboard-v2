@@ -1000,6 +1000,48 @@ def fetch_missing_pb_from_screener(symbol):
 
         return None
 
+        # ============================================================
+        # SECOND FALLBACK
+        #
+        # Search the entire Screener page for Current Price + Book Value
+        # ============================================================
+
+        full_text = soup.get_text(
+            " ",
+            strip=True
+        )
+
+        price_match = re.search(
+            r"Current Price\s*₹?\s*([\d,]+(?:\.\d+)?)",
+            full_text
+        )
+
+        book_match = re.search(
+            r"Book Value\s*₹?\s*([\d,]+(?:\.\d+)?)",
+            full_text
+        )
+
+        if price_match and book_match:
+
+            current_price = float(
+                price_match.group(1).replace(",", "")
+            )
+
+            book_value = float(
+                book_match.group(1).replace(",", "")
+            )
+
+            if book_value != 0:
+
+                pb = current_price / book_value
+
+                print(
+                    f"P/B recovered using fallback: "
+                    f"{symbol} -> {pb:.2f}"
+                )
+
+                return pb
+
 # ============================================================
 # APPLY SCREENER DATA
 #
@@ -1148,6 +1190,7 @@ print(
     f"P/B values recovered: "
     f"{pb_recovered}"
 )
+
 
 
 # ============================================================
