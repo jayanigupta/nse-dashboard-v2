@@ -21,20 +21,37 @@ st.divider()
 
 @st.cache_data
 def load_fundamentals():
-    fundamentals = pd.read_csv("fundamentals.csv")
+
+    
+    fundamentals = pd.read_csv(
+        "fundamentals.csv"
+    )
+
+    # =================================================
+    # LOAD MARKET LENS
+    # =================================================
 
     if "marketlens.csv" in os.listdir("."):
-        marketlens = pd.read_csv("marketlens.csv")
 
-        marketlens.columns = marketlens.columns.str.strip()
+        marketlens = pd.read_csv(
+            "marketlens.csv"
+        )
+
+        marketlens.columns = (
+            marketlens.columns.str.strip()
+        )
 
         # Extract NSE symbol from:
         # Company Name (SYMBOL)
+
         if "Company" in marketlens.columns:
+
             marketlens["Symbol"] = (
                 marketlens["Company"]
                 .astype(str)
-                .str.extract(r"\(([^()]+)\)\s*$")[0]
+                .str.extract(
+                    r"\(([^()]+)\)\s*$"
+                )[0]
                 .astype(str)
                 .str.strip()
                 .str.upper()
@@ -69,10 +86,44 @@ def load_fundamentals():
             suffixes=("", "_ML")
         )
 
+    # =================================================
+    # LOAD FORECAST DATA
+    # =================================================
+
+    if "forecast.csv" in os.listdir("."):
+
+        forecast = pd.read_csv(
+            "forecast.csv"
+        )
+
+        forecast.columns = (
+            forecast.columns.str.strip()
+        )
+
+        forecast_columns = [
+            "Symbol",
+            "Forecast EPS",
+            "Forecast EPS Growth",
+            "Forward P/E",
+            "Forecast Revenue",
+            "Forecast Revenue Growth",
+        ]
+
+        forecast_columns = [
+            column
+            for column in forecast_columns
+            if column in forecast.columns
+        ]
+
+        fundamentals = fundamentals.merge(
+            forecast[forecast_columns],
+            on="Symbol",
+            how="left"
+        )
+
     return fundamentals
-
-
 df = load_fundamentals()
+    
 
 # =========================
 # CLEAN + NORMALIZE INDUSTRY
@@ -135,6 +186,12 @@ field_aliases = {
     "Dividend Yield": "Div Yld %",
     "Market Cap": "Mar Cap Rs.Cr.",
     "Industry PBV": "Ind PBV",
+
+    "Forecast EPS": "Forecast EPS",
+    "Forecast EPS Growth": "Forecast EPS Growth",
+    "Forward P/E": "Forward P/E",
+    "Forecast Revenue": "Forecast Revenue",
+    "Forecast Revenue Growth": "Forecast Revenue Growth",
 }
 
 display_fields = list(field_aliases.keys())
@@ -1355,13 +1412,18 @@ if st.session_state.screen_result is not None:
                 "Dividend Yield",
                 "Div Yield",
                 "Qtr Profit Var",
-                "Qtr Sales Var"
+                "Qtr Sales Var",
+                "Forecast EPS",
+                "Forecast EPS Growth",
+                "Forecast Revenue",
+                "Forecast Revenue Growth"
             }
 
             lower_is_better = {
                 "P/E",
                 "P/B",
-                "CMP / BV"
+                "CMP / BV",
+                "Forward P/E"
             }
 
             # =================================================
@@ -1541,9 +1603,13 @@ if st.session_state.screen_result is not None:
                     "ROE",
                     "ROCE",
                     "Dividend Yield",
-                    "Div Yield"
+                    "Div Yield",
                     "Qtr Profit Var",
-                    "Qtr Sales Var"
+                    "Qtr Sales Var",
+                    "Forecast EPS",
+                    "Forecast EPS Growth",
+                    "Forecast Revenue",
+                    "Forecast Revenue Growth"
                 }
 
                 # ---------------------------------------------
@@ -1551,10 +1617,11 @@ if st.session_state.screen_result is not None:
                 # ---------------------------------------------
 
                 lower_metrics = {
-                        "P/E",
-                        "P/B",
-                        "CMP / BV"
-                    }
+                    "P/E",
+                    "P/B",
+                    "CMP / BV",
+                    "Forward P/E"
+                }
                 
                 # ---------------------------------------------
                 # Don't color statistics columns
