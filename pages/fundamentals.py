@@ -150,7 +150,10 @@ if "filters" not in st.session_state:
     st.session_state.filters = []
 
 if "selected_field" not in st.session_state:
-    st.session_state.selected_field = "P/E"
+    st.session_state.selected_field = "None"
+
+if "filter_metric" not in st.session_state:
+    st.session_state.filter_metric = "None"
 
 if "screen_result" not in st.session_state:
     st.session_state.screen_result = None
@@ -200,7 +203,7 @@ with col1:
         st.session_state.filters = []
         st.session_state.screen_result = None
 
-        st.session_state.selected_field = "P/E"
+        st.session_state.selected_field = "None"
         st.session_state.filter_operator = ">"
         st.session_state.filter_value = 0.0
 
@@ -221,10 +224,8 @@ with col1:
 
     selected_field = st.selectbox(
         "Metric",
-        display_fields,
-        index=display_fields.index(
-            st.session_state.selected_field
-        ),
+        ["None"] + display_fields,
+        index=0,
         key="filter_metric"
     )
 
@@ -1140,26 +1141,12 @@ if st.session_state.screen_result is not None:
             ]
 
             # =================================================
-            # DEFAULT P/B
+            # DEFAULT INDUSTRY METRICS
             # =================================================
 
             if "industry_selected_metrics" not in st.session_state:
 
-                if "P/B" in industry_metric_options:
-
-                    st.session_state.industry_selected_metrics = [
-                        "P/B"
-                    ]
-
-                elif industry_metric_options:
-
-                    st.session_state.industry_selected_metrics = [
-                        industry_metric_options[0]
-                    ]
-
-                else:
-
-                    st.session_state.industry_selected_metrics = []
+                st.session_state.industry_selected_metrics = []
 
             # Remove unavailable metrics
 
@@ -1169,22 +1156,6 @@ if st.session_state.screen_result is not None:
                 in st.session_state.industry_selected_metrics
                 if metric in industry_metric_options
             ]
-
-            # Make sure P/B exists by default
-
-            if not st.session_state.industry_selected_metrics:
-
-                if "P/B" in industry_metric_options:
-
-                    st.session_state.industry_selected_metrics = [
-                        "P/B"
-                    ]
-
-                elif industry_metric_options:
-
-                    st.session_state.industry_selected_metrics = [
-                        industry_metric_options[0]
-                    ]
 
             # =================================================
             # ADD METRIC
@@ -1207,7 +1178,7 @@ if st.session_state.screen_result is not None:
 
                     selected_industry_metric = st.selectbox(
                         "Metric",
-                        available_metric_options,
+                        ["None"] + available_metric_options,
                         key="industry_metric_to_add"
                     )
 
@@ -1229,7 +1200,11 @@ if st.session_state.screen_result is not None:
                     key="add_industry_metric"
                 )
 
-            if add_metric and selected_industry_metric:
+            if (
+                add_metric
+                and selected_industry_metric
+                and selected_industry_metric != "None"
+            ):
 
                 if (
                     selected_industry_metric
@@ -1299,7 +1274,7 @@ if st.session_state.screen_result is not None:
 
                     selected_industry_statistic = st.selectbox(
                         "Statistic",
-                        available_statistic_options,
+                        ["None"] + available_statistic_options,
                         key="industry_statistic_to_add"
                     )
 
@@ -1321,7 +1296,11 @@ if st.session_state.screen_result is not None:
                     key="add_industry_statistic"
                 )
 
-            if add_statistic and selected_industry_statistic:
+            if (
+                add_statistic
+                and selected_industry_statistic
+                and selected_industry_statistic != "None"
+            ):
 
                 if (
                     selected_industry_statistic
@@ -1563,6 +1542,8 @@ if st.session_state.screen_result is not None:
                     "ROCE",
                     "Dividend Yield",
                     "Div Yield"
+                    "Qtr Profit Var",
+                    "Qtr Sales Var"
                 }
 
                 # ---------------------------------------------
@@ -1570,10 +1551,11 @@ if st.session_state.screen_result is not None:
                 # ---------------------------------------------
 
                 lower_metrics = {
-                    "P/B",
-                    "CMP / BV"
-                }
-
+                        "P/E",
+                        "P/B",
+                        "CMP / BV"
+                    }
+                
                 # ---------------------------------------------
                 # Don't color statistics columns
                 # ---------------------------------------------
