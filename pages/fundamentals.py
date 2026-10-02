@@ -20,7 +20,7 @@ st.divider()
 # =========================
 
 @st.cache_data
-def load_fundamentals():
+def load_fundamentals(file_modified_time):
 
     
     fundamentals = pd.read_csv(
@@ -122,8 +122,10 @@ def load_fundamentals():
         )
 
     return fundamentals
-df = load_fundamentals()
-    
+
+df = load_fundamentals(
+    os.path.getmtime("fundamentals.csv")
+)    
 
 # =========================
 # CLEAN + NORMALIZE INDUSTRY
