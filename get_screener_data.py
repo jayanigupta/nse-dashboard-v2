@@ -866,6 +866,32 @@ def normalize_screen_row(row):
             ]
         ),
 
+        "P/E": get_value(
+            row,
+            [
+                "P/E"
+            ]
+        ),
+
+        "Mar Cap Rs.Cr.": get_value(
+            row,
+            [
+                "Mar Cap  Rs.Cr.",
+                "Mar Cap Rs.Cr.",
+                "Market Cap"
+            ]
+        ),
+
+        "Div Yld %": get_value(
+            row,
+            [
+                "Div Yld  %",
+                "Div Yld %",
+                "Dividend Yield",
+                "Dividend Yield (%)"
+            ]
+        ),
+
         "NP Qtr Rs.Cr.": get_value(
             row,
             [
