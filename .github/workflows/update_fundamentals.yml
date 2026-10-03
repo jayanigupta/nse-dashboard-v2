@@ -41,6 +41,10 @@ jobs:
       run: |
         python get_screener_data.py
 
+    - name: Sync with latest main
+      run: |
+        git pull --rebase origin main
+
     - name: Commit updated fundamentals
       run: |
         git config --global user.name "github-actions"
