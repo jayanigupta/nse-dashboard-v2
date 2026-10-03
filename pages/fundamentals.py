@@ -238,6 +238,11 @@ if "selected_daily_stats" not in st.session_state:
         "Median",
         "vs Median"
     ]
+if "industry_hidden_companies" not in st.session_state:
+    st.session_state.industry_hidden_companies = []
+
+if "industry_company_to_hide" not in st.session_state:
+    st.session_state.industry_company_to_hide = None
 
 
 # =========================
@@ -404,6 +409,10 @@ with col_clear:
         use_container_width=True
     )
 
+    if clear_filters:
+
+        st.session_state.industry_hidden_companies = []
+        st.session_state.industry_company_to_hide = None
 
 # =========================
 # CLEAR
@@ -637,6 +646,48 @@ if st.session_state.screen_result is not None:
                     .copy()
                 )
 
+
+            # =================================================
+            # HIDE COMPANY CONFIRMATION
+            # =================================================
+
+            @st.dialog("Hide Company")
+            def confirm_hide_company(company_name):
+
+                st.write(
+                    f"Are you sure you want to temporarily hide **{company_name}**?"
+                )
+
+                confirm_col, cancel_col = st.columns(2)
+
+                with cancel_col:
+
+                    if st.button(
+                        "Cancel",
+                        use_container_width=True
+                    ):
+                        st.session_state.industry_company_to_hide = None
+                        st.rerun()
+
+                with confirm_col:
+
+                    if st.button(
+                        "Hide",
+                        type="primary",
+                        use_container_width=True
+                    ):
+
+                        if company_name not in st.session_state.industry_hidden_companies:
+
+                            st.session_state.industry_hidden_companies.append(
+                                company_name
+                            )
+
+                        st.session_state.industry_company_to_hide = None
+
+                        st.rerun()
+
+
             # =================================================
             # DISPLAY PEER GROUP
             # =================================================
@@ -662,6 +713,18 @@ if st.session_state.screen_result is not None:
                     f"{len(industry_companies)} companies in this "
                     "industry within the current screened universe."
                 )
+
+            # =================================================
+            # REMOVE TEMPORARILY HIDDEN COMPANIES
+            # =================================================
+
+            if st.session_state.industry_hidden_companies:
+
+                industry_companies = industry_companies[
+                    ~industry_companies["Company"].astype(str).isin(
+                        st.session_state.industry_hidden_companies
+                    )
+                ].copy()
 
             # =================================================
             # AVAILABLE METRICS
@@ -691,7 +754,7 @@ if st.session_state.screen_result is not None:
                 if metric in industry_metric_options
             ]
 
-                        # =================================================
+            # =================================================
             # ADD METRIC + ADD STATISTIC
             # =================================================
 
@@ -1354,11 +1417,36 @@ if st.session_state.screen_result is not None:
                 )
             )
 
-            st.dataframe(
+            company_table_event = st.dataframe(
                 styled_peer_table,
                 use_container_width=True,
-                hide_index=True
+                hide_index=True,
+                on_select="rerun",
+                selection_mode="single-row"
             )
+
+            if (
+                company_table_event.selection.rows
+                and st.session_state.industry_company_to_hide is None
+            ):
+
+                selected_row_index = company_table_event.selection.rows[0]
+
+                selected_company_to_hide = (
+                    display_table.iloc[selected_row_index]["Company"]
+                )
+
+                selected_company_to_hide = (
+                    str(selected_company_to_hide)
+                    .replace("⭐ ", "")
+                )
+
+                st.session_state.industry_company_to_hide = (
+                    selected_company_to_hide
+                )
+
+                confirm_hide_company(selected_company_to_hide)
+
 
             # =================================================
             # SELECTED COMPANY VS INDUSTRY
