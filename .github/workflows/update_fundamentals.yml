@@ -23,7 +23,19 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install pandas requests lxml beautifulsoup4
+        pip install pandas requests lxml beautifulsoup4 playwright
+
+          - name: Update Market Lens
+            run: |
+              DAY=$(( $(TZ=Asia/Kolkata date +%s) / 86400 ))
+
+              if (( DAY % 2 == 0 )); then
+                echo "Market Lens update day"
+                python -m playwright install chromium
+                python update_marketlens.py
+              else
+                echo "Skipping Market Lens update today"
+              fi
 
     - name: Get Screener Fundamentals
       run: |
