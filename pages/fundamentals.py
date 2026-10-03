@@ -1109,7 +1109,7 @@ if st.session_state.screen_result is not None:
                     "CMP / BV",
                     "Forward P/E"
                 }
-                
+
                 # ---------------------------------------------
                 # Don't color statistics columns
                 # ---------------------------------------------
@@ -1125,21 +1125,24 @@ if st.session_state.screen_result is not None:
 
                     if len(valid_values) > 0:
 
-                        mean_value = valid_values.mean()
+                        if "Median" in st.session_state.industry_selected_statistics:
+                            reference_value = valid_values.median()
+                        else:
+                            reference_value = valid_values.mean()
 
                         for index, value in values.items():
 
                             if pd.isna(value):
                                 continue
 
-                            if value > mean_value:
+                            if value > reference_value:
 
                                 styles.loc[index] = (
                                     "color: green; "
                                     "font-weight: bold"
                                 )
 
-                            elif value < mean_value:
+                            elif value < reference_value:
 
                                 styles.loc[index] = (
                                     "color: red; "
@@ -1157,21 +1160,24 @@ if st.session_state.screen_result is not None:
 
                     if len(valid_values) > 0:
 
-                        mean_value = valid_values.mean()
+                        if "Median" in st.session_state.industry_selected_statistics:
+                            reference_value = valid_values.median()
+                        else:
+                            reference_value = valid_values.mean()
 
                         for index, value in values.items():
 
                             if pd.isna(value):
                                 continue
 
-                            if value < mean_value:
+                            if value < reference_value:
 
                                 styles.loc[index] = (
                                     "color: green; "
                                     "font-weight: bold"
                                 )
 
-                            elif value > mean_value:
+                            elif value > reference_value:
 
                                 styles.loc[index] = (
                                     "color: red; "
