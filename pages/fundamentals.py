@@ -870,11 +870,67 @@ if st.session_state.screen_result is not None:
 
             if st.session_state.industry_selected_metrics:
 
-                metric_text = " • ".join(
-                    st.session_state.industry_selected_metrics
+                metric_cols = st.columns(
+                    len(st.session_state.industry_selected_metrics)
                 )
 
-                st.info(metric_text)
+                for i, metric in enumerate(
+                    st.session_state.industry_selected_metrics
+                ):
+
+                    with metric_cols[i]:
+
+                        col_name, col_remove = st.columns([5, 1])
+
+                        with col_name:
+
+                            st.info(metric)
+
+                        with col_remove:
+
+                            if st.button(
+                                "×",
+                                key=f"remove_industry_metric_{i}"
+                            ):
+
+                                st.session_state.industry_selected_metrics.pop(i)
+
+                                st.rerun()
+
+            # =================================================
+            # CURRENT STATISTICS
+            # =================================================
+
+            st.caption("Selected statistics:")
+
+            if st.session_state.industry_selected_statistics:
+
+                statistic_cols = st.columns(
+                    len(st.session_state.industry_selected_statistics)
+                )
+
+                for i, statistic in enumerate(
+                    st.session_state.industry_selected_statistics
+                ):
+
+                    with statistic_cols[i]:
+
+                        col_name, col_remove = st.columns([5, 1])
+
+                        with col_name:
+
+                            st.info(statistic)
+
+                        with col_remove:
+
+                            if st.button(
+                                "×",
+                                key=f"remove_industry_statistic_{i}"
+                            ):
+
+                                st.session_state.industry_selected_statistics.pop(i)
+
+                                st.rerun()
 
             # =================================================
             # MAIN COMPARISON TABLE
