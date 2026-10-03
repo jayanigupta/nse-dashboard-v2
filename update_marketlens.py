@@ -6,7 +6,7 @@ URL = "https://marketlens.nseindia.com/screener?t=3AesV0svI5-lPZ1e2zXxqmBt5GATIs
 OUTPUT_FILE = "marketlens.csv"
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(headless=False)
+    browser = p.chromium.launch(headless=True)
     page = browser.new_page()
 
     print("Opening Market Lens...")
