@@ -197,7 +197,6 @@ DUMMYHEG,Dummy HEG Ltd.,No,No,Yes,No,No,Yes,Yes
 DUMMYINGL1,Dummy India Glycols ltd. 1,No,No,Yes,No,No,No,Yes
 DUMMYINGL2,Dummy India Glycols ltd. 2,No,No,Yes,No,No,No,Yes
 DUMMYINXGN,Dummy Inox Green Ltd.,No,No,Yes,No,No,No,Yes
-DUMMYTRVN,Dummy Triveni Ltd.,No,No,Yes,No,No,No,Yes
 DYNAMATECH,Dynamatic Technologies Ltd.,No,No,Yes,No,No,No,Yes
 E2E,E2E NETWORKS Ltd.,No,No,Yes,No,No,No,Yes
 EBGNG,GNG Electronics Ltd.,No,No,Yes,No,No,No,Yes
@@ -705,6 +704,7 @@ TRANSRAILL,Transrail Lighting Ltd.,No,No,Yes,No,No,No,Yes
 TRENT,Trent Ltd.,Yes,Yes,Yes,No,No,No,No
 TRIDENT,Trident Ltd.,No,No,Yes,No,No,Yes,Yes
 TRITURBINE,Triveni Turbine Ltd.,No,No,Yes,No,No,Yes,Yes
+TRIVENIPT,Triveni Power Transmission Ltd.,No,No,Yes,No,No,No,Yes
 TTKPRESTIG,TTK Prestige Ltd.,No,No,Yes,No,No,No,Yes
 TTML,Tata Teleservices (Maharashtra) Ltd.,No,No,Yes,No,No,Yes,Yes
 TVSMOTOR,TVS Motor Company Ltd.,No,Yes,Yes,No,No,No,No
