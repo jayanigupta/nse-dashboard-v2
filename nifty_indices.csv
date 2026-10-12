@@ -130,7 +130,6 @@ CAPLIPOINT,Caplin Point Laboratories Ltd.,No,No,Yes,No,No,Yes,Yes
 CARBORUNIV,Carborundum Universal Ltd.,No,No,Yes,No,No,Yes,Yes
 CARTRADE,Cartrade Tech Ltd.,No,No,Yes,No,No,Yes,Yes
 CASTROLIND,Castrol India Ltd.,No,No,Yes,No,No,Yes,Yes
-CCAVENUE,AvenuesAI Ltd.,No,No,Yes,No,No,No,Yes
 CCL,CCL Products (I) Ltd.,No,No,Yes,No,No,Yes,Yes
 CDSL,Central Depository Services (India) Ltd.,No,No,Yes,No,No,Yes,Yes
 CEATLTD,Ceat Ltd.,No,No,Yes,No,No,Yes,Yes
@@ -186,6 +185,7 @@ DEEPAKFERT,Deepak Fertilisers & Petrochemicals Corp. Ltd.,No,No,Yes,No,No,Yes,Ye
 DEEPAKNTR,Deepak Nitrite Ltd.,No,No,Yes,No,No,Yes,Yes
 DELHIVERY,Delhivery Ltd.,No,No,Yes,No,No,Yes,Yes
 DEVYANI,Devyani International Ltd.,No,No,Yes,No,No,Yes,Yes
+DHOOTTRANS,Dhoot Transmission Ltd.,No,No,No,No,No,No,Yes
 DIACABS,Diamond Power Infrastructure Ltd.,No,No,Yes,No,No,No,Yes
 DIVISLAB,Divi's Laboratories Ltd.,No,Yes,Yes,No,No,No,No
 DIXON,Dixon Technologies (India) Ltd.,No,No,Yes,Yes,Yes,No,No
@@ -516,7 +516,7 @@ PDSL,PDS Ltd.,No,No,Yes,No,No,No,No
 PERSISTENT,Persistent Systems Ltd.,No,No,Yes,Yes,Yes,No,No
 PETRONET,Petronet LNG Ltd.,No,No,Yes,Yes,No,No,No
 PFC,Power Finance Corporation Ltd.,No,Yes,Yes,No,No,No,No
-PFIZER,Pfizer Ltd.,No,No,No,No,No,No,Yes
+PFIZER,Pfizer Ltd.,No,No,Yes,No,No,No,Yes
 PFOCUS,Prime Focus Ltd.,No,No,Yes,No,No,Yes,Yes
 PGEL,PG Electroplast Ltd.,No,No,Yes,No,No,Yes,Yes
 PGHH,Procter & Gamble Hygiene & Health Care Ltd.,No,No,No,No,No,No,Yes
