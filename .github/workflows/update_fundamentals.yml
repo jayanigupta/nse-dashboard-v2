@@ -16,6 +16,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+        
+      - name: Restore fundamentals cache
+        uses: actions/cache@v4
+        with:
+          path: cache/
+          key: fundamentals-cache-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            fundamentals-cache-${{ runner.os }}-
+
+
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
