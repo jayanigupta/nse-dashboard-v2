@@ -53,7 +53,7 @@ jobs:
           fi
 
       - name: Build Fundamentals
-        run: python build_fundamentals.py
+        run: python -u build_fundamentals.py
 
       - name: Commit and push updated data
         run: |
