@@ -1058,9 +1058,23 @@ if st.session_state.screen_result is not None:
 
                 # Main metric
 
-                display_table[metric] = (
-                    numeric_values.values
-                )
+                if metric in {
+                    "Forecast EPS Growth",
+                    "Forecast Revenue Growth",
+                }:
+                    display_table[metric] = (
+                        numeric_values * 100
+                    ).round(2).map(
+                        lambda value: (
+                            f"{value:.2f}%"
+                            if pd.notna(value)
+                            else ""
+                        )
+                    ).values
+                else:
+                    display_table[metric] = (
+                        numeric_values.values
+                    )
 
                 valid_values = (
                     numeric_values.dropna()
