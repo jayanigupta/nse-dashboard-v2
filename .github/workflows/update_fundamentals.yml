@@ -55,12 +55,15 @@ jobs:
       - name: Build Fundamentals
         run: python -u build_fundamentals.py
 
+      - name: Update Forecast Data
+        run: python -u get_forecast_data.py
+
       - name: Commit and push updated data
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
-          git add fundamentals.csv fundamentals.csv.backup marketlens.csv
+          git add fundamentals.csv fundamentals.csv.backup marketlens.csv forecast.csv
 
           if git diff --cached --quiet; then
             echo "No changes to commit"
