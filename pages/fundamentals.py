@@ -651,40 +651,49 @@ if st.session_state.screen_result is not None:
             # HIDE COMPANY CONFIRMATION
             # =================================================
 
-            @st.dialog("Hide Company")
-            def confirm_hide_company(company_name):
+
+            @st.dialog("Hide Selected Companies")
+            def confirm_hide_company(company_names):
 
                 st.write(
-                    f"Are you sure you want to temporarily hide **{company_name}**?"
+                    f"Are you sure you want to temporarily hide "
+                    f"**{len(company_names)} selected companies**?"
                 )
+
+                with st.container(height=180):
+                    for company in company_names:
+                        st.write(f"• {company}")
 
                 confirm_col, cancel_col = st.columns(2)
 
                 with cancel_col:
-
                     if st.button(
                         "Cancel",
-                        use_container_width=True
+                        use_container_width=True,
+                        key="cancel_hide_companies"
                     ):
                         st.session_state.industry_company_to_hide = None
                         st.rerun()
 
                 with confirm_col:
-
                     if st.button(
-                        "Hide",
+                        "Hide All",
                         type="primary",
-                        use_container_width=True
+                        use_container_width=True,
+                        key="confirm_hide_companies"
                     ):
+                        existing = set(
+                            st.session_state.industry_hidden_companies
+                        )
 
-                        if company_name not in st.session_state.industry_hidden_companies:
-
-                            st.session_state.industry_hidden_companies.append(
-                                company_name
-                            )
+                        for company in company_names:
+                            if company not in existing:
+                                st.session_state.industry_hidden_companies.append(
+                                    company
+                                )
+                                existing.add(company)
 
                         st.session_state.industry_company_to_hide = None
-
                         st.rerun()
 
 
@@ -1409,6 +1418,7 @@ if st.session_state.screen_result is not None:
                     )
 
 
+            
             styled_peer_table = (
                 display_table.style
                 .apply(
@@ -1422,30 +1432,47 @@ if st.session_state.screen_result is not None:
                 use_container_width=True,
                 hide_index=True,
                 on_select="rerun",
-                selection_mode="single-row"
+                selection_mode="multi-row",
+                key=f"industry_peer_table_{len(st.session_state.industry_hidden_companies)}"
             )
 
-            if (
-                company_table_event.selection.rows
-                and st.session_state.industry_company_to_hide is None
+            # Get all selected company names
+            selected_rows = company_table_event.selection.rows
+
+            selected_companies_to_hide = []
+
+            for row_index in selected_rows:
+                company = str(
+                    display_table.iloc[row_index]["Company"]
+                ).replace("⭐ ", "")
+
+                if company not in selected_companies_to_hide:
+                    selected_companies_to_hide.append(company)
+
+            # Show Hide button only when companies are selected
+            if selected_companies_to_hide:
+                st.caption(
+                    f"{len(selected_companies_to_hide)} companies selected."
+                )
+
+            if st.button(
+                f"🙈 Hide Selected ({len(selected_companies_to_hide)})",
+                key="hide_selected_industry_companies",
+                type="primary"
             ):
-
-                selected_row_index = company_table_event.selection.rows[0]
-
-                selected_company_to_hide = (
-                    display_table.iloc[selected_row_index]["Company"]
-                )
-
-                selected_company_to_hide = (
-                    str(selected_company_to_hide)
-                    .replace("⭐ ", "")
-                )
-
                 st.session_state.industry_company_to_hide = (
-                    selected_company_to_hide
+                    selected_companies_to_hide.copy()
+                )
+                confirm_hide_company(
+                    st.session_state.industry_company_to_hide
                 )
 
-                confirm_hide_company(selected_company_to_hide)
+            # Open one confirmation dialog for all selected companies
+            if st.session_state.industry_company_to_hide:
+                confirm_hide_company(
+                    st.session_state.industry_company_to_hide
+                )
+
 
 
             # =================================================
