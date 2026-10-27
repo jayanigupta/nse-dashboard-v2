@@ -555,24 +555,12 @@ if st.session_state.screen_result is not None:
         else:
 
             # =========================
-            # COMPANY SEARCH
+            # COMPANY + INDUSTRY SEARCH
             # =========================
 
             company_options = ["None"] + sorted(
                 industry_data["Company"].dropna().astype(str).unique().tolist()
             )
-
-            selected_peer_company = st.selectbox(
-                "Company",
-                company_options,
-                index=0,
-                key="industry_company_selection",
-                help="Select a company to explore its industry peers."
-            )
-            
-            # =========================
-            # INDUSTRY SEARCH
-            # =========================
 
             industry_options = ["All Industries"] + sorted(
                 industry_data["Industry"]
@@ -584,13 +572,24 @@ if st.session_state.screen_result is not None:
                 .tolist()
             )
 
-            selected_industry = st.selectbox(
-                "🏭 Search / Select Industry",
-                industry_options,
-                index=0,
-                key="industry_explorer_selection"
-            )
+            col_company, col_industry = st.columns(2)
 
+            with col_company:
+                selected_peer_company = st.selectbox(
+                    "Company",
+                    company_options,
+                    index=0,
+                    key="industry_company_selection",
+                    help="Select a company to automatically view its industry peers."
+                )
+
+            with col_industry:
+                selected_industry = st.selectbox(
+                    "Industry",
+                    industry_options,
+                    index=0,
+                    key="industry_explorer_selection"
+                )
             # =================================================
             # DETERMINE PEER GROUP
             # =================================================
@@ -965,20 +964,36 @@ if st.session_state.screen_result is not None:
 
                         col_name, col_remove = st.columns([5, 1])
 
-                        with col_name:
+                    with col_name:
+                        st.markdown(
+                            f"""
+                            <div style="
+                                background: rgba(0, 230, 160, 0.08);
+                                border: 1px solid rgba(0, 230, 160, 0.25);
+                                border-radius: 10px;
+                                padding: 0.55rem 0.7rem;
+                                color: #dce7f5;
+                                font-size: 0.85rem;
+                                font-weight: 500;
+                                min-height: 2.5rem;
+                                display: flex;
+                                align-items: center;
+                            ">
+                                {metric}
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
 
-                            st.info(metric)
-
-                        with col_remove:
-
-                            if st.button(
-                                "×",
-                                key=f"remove_industry_metric_{i}"
-                            ):
-
-                                st.session_state.industry_selected_metrics.pop(i)
-
-                                st.rerun()
+                    with col_remove:
+                        if st.button(
+                            "✕",
+                            key=f"remove_industry_metric_{i}",
+                            help=f"Remove {metric}",
+                            use_container_width=True
+                        ):
+                            st.session_state.industry_selected_metrics.pop(i)
+                            st.rerun()
 
             # =================================================
             # CURRENT STATISTICS
@@ -1001,20 +1016,35 @@ if st.session_state.screen_result is not None:
                         col_name, col_remove = st.columns([5, 1])
 
                         with col_name:
-
-                            st.info(statistic)
+                            st.markdown(
+                                f"""
+                                <div style="
+                                    background: rgba(100, 120, 255, 0.09);
+                                    border: 1px solid rgba(120, 140, 255, 0.28);
+                                    border-radius: 10px;
+                                    padding: 0.55rem 0.7rem;
+                                    color: #dce7f5;
+                                    font-size: 0.85rem;
+                                    font-weight: 500;
+                                    min-height: 2.5rem;
+                                    display: flex;
+                                    align-items: center;
+                                ">
+                                    {statistic}
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
 
                         with col_remove:
-
                             if st.button(
-                                "×",
-                                key=f"remove_industry_statistic_{i}"
+                                "✕",
+                                key=f"remove_industry_statistic_{i}",
+                                help=f"Remove {statistic}",
+                                use_container_width=True
                             ):
-
                                 st.session_state.industry_selected_statistics.pop(i)
-
                                 st.rerun()
-
             # =================================================
             # MAIN COMPARISON TABLE
             # =================================================
@@ -1739,7 +1769,26 @@ if st.session_state.screen_result is not None:
 
     result = st.session_state.screen_result
 
-    st.markdown("### 📊 Group & Compare")
+    st.markdown(
+        """
+        <div style="
+            margin: 1rem 0 0.6rem 0;
+            padding: 0.65rem 1rem;
+            border: 1px solid rgba(90,100,255,0.18);
+            border-radius: 12px;
+            background: linear-gradient(
+                110deg,
+                rgba(90,100,255,0.07),
+                rgba(0,255,170,0.035)
+            );
+            font-size: 1.15rem;
+            font-weight: 700;
+        ">
+            📊 Group &amp; Compare
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     available_groups = [
         "No Grouping"
@@ -1785,12 +1834,14 @@ if st.session_state.screen_result is not None:
             "Quarterly Profit Growth"
         )
 
-    group_by = st.selectbox(
-        "Group by",
-        available_groups,
-        key="group_by"
-    )
+    group_col, _ = st.columns([1, 2])
 
+    with group_col:
+        group_by = st.selectbox(
+            "Group by",
+            available_groups,
+            key="group_by"
+        )
     # =========================
     # GROUP RESULT
     # =========================
