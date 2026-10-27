@@ -2,15 +2,44 @@ import streamlit as st
 import pandas as pd
 import os
 
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+from theme import apply_finance_theme
+
+
 st.set_page_config(
     page_title="Fundamentals",
     page_icon="📊",
     layout="wide"
 )
 
-st.markdown("### 📊 Fundamentals")
-st.caption("Company analysis · Financial ratios · Forecasts")
-st.caption("Data source: NSE India, MarketLens, Yahoo Finance")
+apply_finance_theme()
+
+st.markdown("# 📊 Fundamentals")
+st.caption("Explore company financials, valuation ratios, and analyst forecasts.")
+
+st.markdown(
+    """
+    <div style="
+        height: 1px;
+        margin: 0.5rem 0 1.25rem 0;
+        background: linear-gradient(
+            90deg,
+            rgba(0,255,170,0.65),
+            rgba(90,100,255,0.25),
+            transparent
+        );
+    "></div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.caption("Data sources: NSE India · Market Lens · Yahoo Finance")
 
 
 # =========================
@@ -463,12 +492,32 @@ if run_screen:
 
 if st.session_state.screen_result is not None:
 
-    st.divider()
-
-    st.subheader("🏭 Industry Explorer")
-
-    st.caption(
-        "Compare companies using industry peers, metrics, and statistics."
+    st.markdown(
+        """
+        <div style="
+            margin: 0.8rem 0 0.5rem 0;
+            padding: 0.65rem 1rem;
+            border: 1px solid rgba(0,255,170,0.12);
+            border-radius: 12px;
+            background: linear-gradient(
+                110deg,
+                rgba(0,255,170,0.055),
+                rgba(90,100,255,0.035)
+            );
+        ">
+            <div style="font-size: 1.15rem; font-weight: 700;">
+                🏭 Industry Explorer
+            </div>
+            <div style="
+                font-size: 0.82rem;
+                color: #9ba9bd;
+                margin-top: 0.2rem;
+            ">
+                Compare companies with industry peers, metrics, and statistics.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
     # =========================================================
@@ -514,11 +563,13 @@ if st.session_state.screen_result is not None:
             )
 
             selected_peer_company = st.selectbox(
-                "🏢 Search / Select Company",
+                "Company",
                 company_options,
                 index=0,
-                key="industry_company_selection"
+                key="industry_company_selection",
+                help="Select a company to explore its industry peers."
             )
+            
             # =========================
             # INDUSTRY SEARCH
             # =========================

@@ -288,7 +288,58 @@ def main() -> None:
     if "VOL_RATIO" in display_df.columns:
         styled = styled.map(color_ratio, subset=["VOL_RATIO"])
 
-    st.dataframe(styled, use_container_width=True)
+    st.dataframe(
+        styled,
+        use_container_width=True,
+        column_config={
+            "DATE1": st.column_config.TextColumn(
+                "Date",
+                help="Trading date reported in the NSE Bhavcopy."
+            ),
+            "SYMBOL": st.column_config.TextColumn(
+                "Symbol",
+                help="NSE trading symbol identifying the stock."
+            ),
+            "DELIV_PER": st.column_config.NumberColumn(
+                "Delivery %",
+                help="Percentage of traded quantity delivered. "
+                    "Formula: Delivery Quantity / Traded Quantity × 100.",
+                format="%.2f%%"
+            ),
+            "TTL_TRD_QNTY": st.column_config.NumberColumn(
+                "Traded Quantity",
+                help="Total quantity traded, as reported in the NSE Bhavcopy."
+            ),
+            f"AVG_{timeframe}_VOLUME": st.column_config.NumberColumn(
+                f"Average Volume ({timeframe})",
+                help=f"Average trading volume for {timeframe}."
+            ),
+            "VOL_RATIO": st.column_config.NumberColumn(
+                "Volume Ratio",
+                help=(
+                    f"Formula: Today's Traded Quantity / "
+                    f"Average Volume ({timeframe}). "
+                    + (
+                        "For 1D, the ratio is always 1.00x "
+                        "because today's volume is used as its own average. "
+                        if timeframe == "1D"
+                        else ""
+                    )
+                    + "A ratio of 2.00x means today's volume is twice "
+                    "the average for the selected period."
+                ),
+                format="%.2fx"
+            ),
+            "OPEN_PRICE": st.column_config.NumberColumn(
+                "Open Price",
+                help="Opening price reported in the NSE Bhavcopy."
+            ),
+            "CLOSE_PRICE": st.column_config.NumberColumn(
+                "Close Price",
+                help="Closing price reported in the NSE Bhavcopy."
+            ),
+        }
+    )
 
 
     # ── Export buttons ─────────────────────────────────────────
