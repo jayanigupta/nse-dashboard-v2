@@ -9,15 +9,31 @@ with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     page = browser.new_page()
 
+
     print("Opening Market Lens...")
 
-    page.goto(
-        URL,
-        wait_until="domcontentloaded",
-        timeout=120000
-    )
+    from playwright.sync_api import Error as PlaywrightError
+    import time
 
-    print("Page opened.")
+    for attempt in range(1, 4):
+        try:
+            page.goto(
+                URL,
+                wait_until="domcontentloaded",
+                timeout=120000
+            )
+            print("Page opened.")
+            break
+
+        except PlaywrightError as e:
+            print(f"Navigation attempt {attempt}/3 failed: {e}")
+
+            if attempt == 3:
+                browser.close()
+                raise
+
+            time.sleep(attempt * 5)
+
     print("Title:", page.title())
 
     # Give the Market Lens screener time to load its data
@@ -48,7 +64,7 @@ with sync_playwright() as p:
     temp_file = "marketlens_new.csv"
     download.save_as(temp_file)
 
-    # Check that the download actually contains data
+    # Check that the download actually contains dataf
     with open(temp_file, "r", encoding="utf-8-sig") as f:
         lines = f.readlines()
 
