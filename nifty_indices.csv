@@ -309,7 +309,8 @@ HYUNDAI,Hyundai Motor India Ltd.,No,Yes,Yes,No,No,No,No
 ICICIAMC,ICICI Prudential Asset Management Company Ltd.,No,No,Yes,Yes,Yes,No,No
 ICICIBANK,ICICI Bank Ltd.,Yes,Yes,Yes,No,No,No,No
 ICICIGI,ICICI Lombard General Insurance Company Ltd.,No,No,Yes,Yes,Yes,No,No
-ICICIPRULI,ICICI Prudential Life Insurance Company Ltd.,No,No,Yes,Yes,No,No,No
+ICICILIFE,ICICI Life Insurance Ltd.,No,No,No,Yes,No,No,No
+ICICIPRULI,,No,No,Yes,No,No,No,No
 ICIL,Indo Count Industries Ltd.,No,No,Yes,No,No,No,Yes
 IDBI,IDBI Bank Ltd.,No,No,Yes,No,No,Yes,Yes
 IDEA,Vodafone Idea Ltd.,No,Yes,Yes,No,No,No,No
