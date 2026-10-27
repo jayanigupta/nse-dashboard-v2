@@ -8,11 +8,9 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📊 Fundamentals")
-st.caption("Screener-style company analysis")
-st.caption("Data source: Screener.in, NSE, Yahoo Finance")
-
-st.divider()
+st.markdown("### 📊 Fundamentals")
+st.caption("Company analysis · Financial ratios · Forecasts")
+st.caption("Data source: NSE India, MarketLens, Yahoo Finance")
 
 
 # =========================
@@ -245,102 +243,76 @@ if "industry_company_to_hide" not in st.session_state:
     st.session_state.industry_company_to_hide = None
 
 
+
 # =========================
-# FILTER BUILDER
+# FILTER BUILDER + ACTIONS
 # =========================
 
-st.subheader("🔎 Build Your Screen")
-
-col1, col2, col3, col4 = st.columns(
-    [3, 1.5, 2, 1.2]
+col_filters, col_run, col_clear = st.columns(
+    [3, 1.2, 1],
+    vertical_alignment="center"
 )
 
+with col_filters:
+    with st.expander("🔎 Filters", expanded=False):
 
-with col1:
+        # Reset filter widgets when Clear is clicked
+        if st.session_state.clear_filters_requested:
+            st.session_state.filters = []
+            st.session_state.screen_result = None
 
-    # =========================
-    # RESET FILTER WIDGETS
-    # =========================
+            st.session_state.selected_field = "None"
+            st.session_state.filter_operator = ">"
+            st.session_state.filter_value = 0.0
+            st.session_state.group_by = "No Grouping"
 
-    if st.session_state.clear_filters_requested:
+            st.session_state.industry_company_selection = "None"
+            st.session_state.industry_explorer_selection = "All Industries"
+            st.session_state.industry_selected_metrics = []
+            st.session_state.industry_selected_statistics = []
 
-        st.session_state.filters = []
-        st.session_state.screen_result = None
+            st.session_state.selected_daily_stats = [
+                "Value", "Median", "vs Median"
+            ]
 
-        st.session_state.selected_field = "None"
-        st.session_state.filter_operator = ">"
-        st.session_state.filter_value = 0.0
+            st.session_state.clear_filters_requested = False
 
-        st.session_state.group_by = "No Grouping"
+        selected_field = st.selectbox(
+            "Metric",
+            ["None"] + display_fields,
+            index=0,
+            key="filter_metric"
+        )
 
-        st.session_state.industry_company_selection = "None"
-        st.session_state.industry_explorer_selection = "All Industries"
-        st.session_state.industry_selected_metrics = []
-        st.session_state.industry_selected_statistics = []
+        selected_operator = st.selectbox(
+            "Condition",
+            [">", "<", ">=", "<=", "=", "!="],
+            key="filter_operator"
+        )
 
-        st.session_state.selected_daily_stats = [
+        selected_value = st.number_input(
             "Value",
-            "Median",
-            "vs Median"
-        ]
+            value=0.0,
+            step=1.0,
+            key="filter_value"
+        )
 
-        st.session_state.clear_filters_requested = False
-
-    selected_field = st.selectbox(
-        "Metric",
-        ["None"] + display_fields,
-        index=0,
-        key="filter_metric"
-    )
-
-
-with col2:
-
-    selected_operator = st.selectbox(
-        "Condition",
-        [">", "<", ">=", "<=", "=", "!="],
-        key="filter_operator"
-    )
-
-
-with col3:
-    selected_value = st.number_input(
-        "Value",
-        value=0.0,
-        step=1.0,
-        key="filter_value"
-    )
-
-
-with col4:
-
-    st.write("")
-    st.write("")
-
-    add_filter = st.button(
-        "➕ Add",
-        use_container_width=True
-    )
-
+        add_filter = st.button("➕ Add")
 
 # =========================
 # ADD FILTER
 # =========================
 
 if add_filter:
-
     st.session_state.selected_field = selected_field
 
     csv_field = field_aliases[selected_field]
 
     if csv_field not in df.columns:
-
         st.error(
             f"{selected_field} is not available in the current data."
         )
-
     else:
-
         st.session_state.filters.append({
             "display": selected_field,
             "field": csv_field,
@@ -353,76 +325,64 @@ if add_filter:
             icon="✅"
         )
 
-
 # =========================
 # ACTIVE FILTERS
 # =========================
 
 if st.session_state.filters:
-
-    st.markdown("### Active Filters")
-
-    for i, filter_item in enumerate(
-        st.session_state.filters
+    with st.expander(
+        f"Active Filters ({len(st.session_state.filters)})",
+        expanded=True
     ):
+        for i, filter_item in enumerate(st.session_state.filters):
+            filter_col, remove_col = st.columns([8, 1])
 
-        col1, col2 = st.columns([8, 1])
+            with filter_col:
+                st.caption(
+                    f"{filter_item['display']} "
+                    f"{filter_item['operator']} "
+                    f"{filter_item['value']}"
+                )
 
-        with col1:
-
-            st.info(
-                f"{filter_item['display']} "
-                f"{filter_item['operator']} "
-                f"{filter_item['value']}"
-            )
-
-        with col2:
-
-            if st.button(
-                "✕",
-                key=f"remove_{i}"
-            ):
-
-                st.session_state.filters.pop(i)
-                st.rerun()
-
+            with remove_col:
+                if st.button("✕", key=f"remove_{i}"):
+                    st.session_state.filters.pop(i)
+                    st.rerun()
 
 # =========================
 # RUN / CLEAR
 # =========================
 
-col_run, col_clear = st.columns([2, 1])
-
-
 with col_run:
-
+    st.markdown(
+        "<div style='margin-top: -38px;'></div>",
+        unsafe_allow_html=True
+    )
     run_screen = st.button(
         "🔍 Run Screen",
         use_container_width=True
     )
 
-
 with col_clear:
-
+    st.markdown(
+        "<div style='margin-top: -38px;'></div>",
+        unsafe_allow_html=True
+    )
     clear_filters = st.button(
         "🗑 Clear",
         use_container_width=True
     )
-
-    if clear_filters:
-
-        st.session_state.industry_hidden_companies = []
-        st.session_state.industry_company_to_hide = None
 
 # =========================
 # CLEAR
 # =========================
 
 if clear_filters:
-
+    st.session_state.industry_hidden_companies = []
+    st.session_state.industry_company_to_hide = None
     st.session_state.clear_filters_requested = True
-
     st.rerun()
+
 
 # =========================
 # RUN FILTERS
