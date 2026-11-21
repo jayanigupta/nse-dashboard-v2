@@ -40,6 +40,33 @@ st.markdown(
 )
 
 st.caption("Data sources: NSE India · Market Lens · Yahoo Finance")
+# =========================
+# DOWNLOAD DATA FILES
+# =========================
+
+download_col1, download_col2, _ = st.columns([1, 1, 5])
+
+with download_col1:
+    if os.path.exists("fundamentals.csv"):
+        with open("fundamentals.csv", "rb") as file:
+            st.download_button(
+                label="⬇ Fundamentals CSV",
+                data=file,
+                file_name="fundamentals.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+
+with download_col2:
+    if os.path.exists("forecast.csv"):
+        with open("forecast.csv", "rb") as file:
+            st.download_button(
+                label="⬇ Forecast CSV",
+                data=file,
+                file_name="forecast.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
 
 
 # =========================
@@ -119,46 +146,80 @@ def load_fundamentals(file_modified_time):
 
     if "forecast.csv" in os.listdir("."):
 
-        forecast = pd.read_csv(
-            "forecast.csv"
+        forecast = pd.read_csv("forecast.csv")
+
+        forecast.columns = forecast.columns.str.strip()
+
+        # Normalize symbols in both files
+        fundamentals["Symbol"] = (
+            fundamentals["Symbol"]
+            .astype(str).str.strip().str.upper()
         )
 
-        forecast.columns = (
-            forecast.columns.str.strip()
+        forecast["Symbol"] = (
+            forecast["Symbol"]
+            .astype(str).str.strip().str.upper()
         )
 
         forecast_columns = [
-            "Symbol",
             "Forecast EPS",
             "Forecast EPS Growth",
             "Forward P/E",
             "Forecast Revenue",
             "Forecast Revenue Growth",
+            "EPS Analysts",
+            "Revenue Analysts",
         ]
 
         forecast_columns = [
-            column
-            for column in forecast_columns
-            if column in forecast.columns
+            col for col in forecast_columns
+            if col in forecast.columns
         ]
 
+        forecast = forecast[
+            ["Symbol"] + forecast_columns
+        ].drop_duplicates(subset=["Symbol"], keep="last")
+
         fundamentals = fundamentals.merge(
-            forecast[forecast_columns],
+            forecast,
             on="Symbol",
-            how="left"
+            how="left",
+            suffixes=("", "_forecast")
         )
+
+        # Prefer forecast.csv values while retaining all other columns
+        for col in forecast_columns:
+
+            forecast_col = f"{col}_forecast"
+
+            if forecast_col in fundamentals.columns:
+
+                if col in fundamentals.columns:
+                    fundamentals[col] = fundamentals[forecast_col].combine_first(
+                        fundamentals[col]
+                    )
+                else:
+                    fundamentals[col] = fundamentals[forecast_col]
+
+                fundamentals.drop(columns=[forecast_col], inplace=True)
 
     return fundamentals
 
+
+# =========================
+# LOAD DATA INTO DF
+# =========================
+
 df = load_fundamentals(
     os.path.getmtime("fundamentals.csv")
-)    
+)
 
 # =========================
 # CLEAN + NORMALIZE INDUSTRY
 # =========================
 
 df.columns = df.columns.str.strip()
+
 
 if "Industry" in df.columns:
     df["Industry"] = (
@@ -207,15 +268,39 @@ if "Industry" in df.columns:
 # FILTER OPTIONS
 # =========================
 
+
 field_aliases = {
+    # Valuation
     "P/E": "P/E",
     "P/B": "CMP / BV",
-    "ROCE": "ROCE %",
-    "ROE": "ROE 10Yr %",
-    "Dividend Yield": "Div Yld %",
-    "Market Cap": "Mar Cap Rs.Cr.",
+    "EV/EBIT": "EV/EBIT",
+    "EV/EBITDA": "EV/EBITDA",
+    "EV/Sales": "EV/Sales",
+    "Earnings Yield": "Earnings Yield %",
     "Industry PBV": "Ind PBV",
 
+    # Profitability
+    "ROE": "ROE %",
+    "ROCE": "ROCE %",
+    "ROA": "ROA %",
+    "Gross Profit Margin": "Gross Profit Margin %",
+    "Net Profit Margin": "Net Profit Margin %",
+    "Operating Margin": "Operating Margin %",
+
+    # Growth
+    "Quarterly Profit Growth": "Qtr Profit Var %",
+    "Quarterly Sales Growth": "Qtr Sales Var %",
+    "Annual Revenue Growth": "Annual Revenue Growth %",
+    "Annual Net Income Growth": "Annual Net Income Growth %",
+
+    # Financial Health
+    "Debt/Equity": "Debt/Equity",
+    "Dividend Yield": "Div Yld %",
+
+    # Other existing metrics
+    "Market Cap": "Mar Cap Rs.Cr.",
+
+    # Forecasts
     "Forecast EPS": "Forecast EPS",
     "Forecast EPS Growth": "Forecast EPS Growth",
     "Forward P/E": "Forward P/E",
@@ -224,6 +309,7 @@ field_aliases = {
 }
 
 display_fields = list(field_aliases.keys())
+
 
 # =========================
 # SESSION STATE
@@ -555,12 +641,24 @@ if st.session_state.screen_result is not None:
         else:
 
             # =========================
-            # COMPANY + INDUSTRY SEARCH
+            # COMPANY SEARCH
             # =========================
 
             company_options = ["None"] + sorted(
                 industry_data["Company"].dropna().astype(str).unique().tolist()
             )
+
+            selected_peer_company = st.selectbox(
+                "Company",
+                company_options,
+                index=0,
+                key="industry_company_selection",
+                help="Select a company to explore its industry peers."
+            )
+            
+            # =========================
+            # INDUSTRY SEARCH
+            # =========================
 
             industry_options = ["All Industries"] + sorted(
                 industry_data["Industry"]
@@ -572,24 +670,13 @@ if st.session_state.screen_result is not None:
                 .tolist()
             )
 
-            col_company, col_industry = st.columns(2)
+            selected_industry = st.selectbox(
+                "🏭 Search / Select Industry",
+                industry_options,
+                index=0,
+                key="industry_explorer_selection"
+            )
 
-            with col_company:
-                selected_peer_company = st.selectbox(
-                    "Company",
-                    company_options,
-                    index=0,
-                    key="industry_company_selection",
-                    help="Select a company to automatically view its industry peers."
-                )
-
-            with col_industry:
-                selected_industry = st.selectbox(
-                    "Industry",
-                    industry_options,
-                    index=0,
-                    key="industry_explorer_selection"
-                )
             # =================================================
             # DETERMINE PEER GROUP
             # =================================================
@@ -783,63 +870,112 @@ if st.session_state.screen_result is not None:
             # ADD METRIC
             # =================================================
 
+
             with col_metric:
 
-                st.markdown("#### 📊 Add Metric")
+                st.markdown("#### 📊 Ratio Gallery")
 
+                # Available metrics from the current data
                 available_metric_options = [
                     metric
                     for metric in industry_metric_options
-                    if metric
-                    not in st.session_state.industry_selected_metrics
+                    if metric not in st.session_state.industry_selected_metrics
                 ]
 
-                col1, col2 = st.columns([4, 1])
+                ratio_categories = {
+                    "Valuation": [
+                        "P/E",
+                        "P/B",
+                        "Market Cap",
+                        "EV/EBIT",
+                        "EV/EBITDA",
+                        "EV/Sales",
+                        "Earnings Yield",
+                        "Industry PBV",
+                    ],
+                    "Profitability": [
+                        "ROE",
+                        "ROCE",
+                        "ROA",
+                        "Gross Profit Margin",
+                        "Net Profit Margin",
+                        "Operating Margin",
+                    ],
+                    "Growth": [
+                        "Quarterly Profit Growth",
+                        "Quarterly Sales Growth",
+                        "Annual Revenue Growth",
+                        "Annual Net Income Growth",
+                    ],
+                    "Health": [
+                        "Debt/Equity",
+                        "Dividend Yield",
+                    ],
 
-                with col1:
+                    "Forecasts": [
+                        "Forecast EPS",
+                        "Forecast EPS Growth",
+                        "Forward P/E",
+                        "Forecast Revenue",
+                        "Forecast Revenue Growth",
+                    ],
+                }
 
-                    if available_metric_options:
-
-                        selected_industry_metric = st.selectbox(
-                            "Metric",
-                            ["None"] + available_metric_options,
-                            key="industry_metric_to_add"
-                        )
-
-                    else:
-
-                        selected_industry_metric = None
-
-                        st.info(
-                            "All available metrics have been added."
-                        )
-
-                with col2:
-
-                    st.write("")
-                    st.write("")
-
-                    add_metric = st.button(
-                        "➕ Add",
-                        key="add_industry_metric"
-                    )
-
-            if (
-                add_metric
-                and selected_industry_metric
-                and selected_industry_metric != "None"
-            ):
-
-                if (
-                    selected_industry_metric
-                    not in st.session_state.industry_selected_metrics
+                with st.popover(
+                    f"＋ Ratios ({len(st.session_state.industry_selected_metrics)})",
+                    use_container_width=True
                 ):
 
-                    st.session_state.industry_selected_metrics.append(
-                        selected_industry_metric
-                    )
+                    st.caption("Click a ratio to add or remove it.")
 
-                    st.rerun()
+                    tabs = st.tabs(list(ratio_categories.keys()))
+
+                    for tab, (category, metrics) in zip(
+                        tabs,
+                        ratio_categories.items()
+                    ):
+
+                        with tab:
+
+                            available = [
+                                metric
+                                for metric in metrics
+                                if metric in industry_metric_options
+                            ]
+
+                            if not available:
+                                st.caption("No metrics available.")
+                                continue
+
+                            metric_cols = st.columns(3)
+
+                            for i, metric in enumerate(available):
+
+                                is_selected = (
+                                    metric
+                                    in st.session_state.industry_selected_metrics
+                                )
+
+                                with metric_cols[i % 3]:
+
+                                    if st.button(
+                                        f"{'✓' if is_selected else '＋'} {metric}",
+                                        key=f"ratio_gallery_{category}_{metric}",
+                                        type="primary" if is_selected else "secondary",
+                                        use_container_width=True
+                                    ):
+
+                                        if is_selected:
+                                            st.session_state.industry_selected_metrics.remove(
+                                                metric
+                                            )
+                                        else:
+                                            st.session_state.industry_selected_metrics.append(
+                                                metric
+                                            )
+
+                                        st.rerun()
+
 
             # =================================================
             # ADD STATISTIC
@@ -952,48 +1088,30 @@ if st.session_state.screen_result is not None:
 
             if st.session_state.industry_selected_metrics:
 
-                metric_cols = st.columns(
-                    len(st.session_state.industry_selected_metrics)
-                )
+                with st.container(border=True):
 
-                for i, metric in enumerate(
-                    st.session_state.industry_selected_metrics
-                ):
+                    metric_list = st.session_state.industry_selected_metrics
 
-                    with metric_cols[i]:
+                    metric_cols = st.columns(4)
 
-                        col_name, col_remove = st.columns([5, 1])
+                    for i, metric in enumerate(metric_list):
 
-                    with col_name:
-                        st.markdown(
-                            f"""
-                            <div style="
-                                background: rgba(0, 230, 160, 0.08);
-                                border: 1px solid rgba(0, 230, 160, 0.25);
-                                border-radius: 10px;
-                                padding: 0.55rem 0.7rem;
-                                color: #dce7f5;
-                                font-size: 0.85rem;
-                                font-weight: 500;
-                                min-height: 2.5rem;
-                                display: flex;
-                                align-items: center;
-                            ">
-                                {metric}
-                            </div>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                        with metric_cols[i % 4]:
 
-                    with col_remove:
-                        if st.button(
-                            "✕",
-                            key=f"remove_industry_metric_{i}",
-                            help=f"Remove {metric}",
-                            use_container_width=True
-                        ):
-                            st.session_state.industry_selected_metrics.pop(i)
-                            st.rerun()
+                            if st.button(
+                                f"✕  {metric}",
+                                key=f"remove_industry_metric_{i}",
+                                use_container_width=True,
+                                type="secondary",
+                                help=f"Remove {metric}"
+                            ):
+
+                                st.session_state.industry_selected_metrics.remove(metric)
+                                st.rerun()
+
+            else:
+                st.caption("No metrics selected. Add ratios using the Ratio Gallery above.")
+
 
             # =================================================
             # CURRENT STATISTICS
@@ -1016,35 +1134,20 @@ if st.session_state.screen_result is not None:
                         col_name, col_remove = st.columns([5, 1])
 
                         with col_name:
-                            st.markdown(
-                                f"""
-                                <div style="
-                                    background: rgba(100, 120, 255, 0.09);
-                                    border: 1px solid rgba(120, 140, 255, 0.28);
-                                    border-radius: 10px;
-                                    padding: 0.55rem 0.7rem;
-                                    color: #dce7f5;
-                                    font-size: 0.85rem;
-                                    font-weight: 500;
-                                    min-height: 2.5rem;
-                                    display: flex;
-                                    align-items: center;
-                                ">
-                                    {statistic}
-                                </div>
-                                """,
-                                unsafe_allow_html=True
-                            )
+
+                            st.info(statistic)
 
                         with col_remove:
+
                             if st.button(
-                                "✕",
-                                key=f"remove_industry_statistic_{i}",
-                                help=f"Remove {statistic}",
-                                use_container_width=True
+                                "×",
+                                key=f"remove_industry_statistic_{i}"
                             ):
+
                                 st.session_state.industry_selected_statistics.pop(i)
+
                                 st.rerun()
+
             # =================================================
             # MAIN COMPARISON TABLE
             # =================================================
@@ -1769,26 +1872,7 @@ if st.session_state.screen_result is not None:
 
     result = st.session_state.screen_result
 
-    st.markdown(
-        """
-        <div style="
-            margin: 1rem 0 0.6rem 0;
-            padding: 0.65rem 1rem;
-            border: 1px solid rgba(90,100,255,0.18);
-            border-radius: 12px;
-            background: linear-gradient(
-                110deg,
-                rgba(90,100,255,0.07),
-                rgba(0,255,170,0.035)
-            );
-            font-size: 1.15rem;
-            font-weight: 700;
-        ">
-            📊 Group &amp; Compare
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    st.markdown("### 📊 Group & Compare")
 
     available_groups = [
         "No Grouping"
@@ -1834,14 +1918,12 @@ if st.session_state.screen_result is not None:
             "Quarterly Profit Growth"
         )
 
-    group_col, _ = st.columns([1, 2])
+    group_by = st.selectbox(
+        "Group by",
+        available_groups,
+        key="group_by"
+    )
 
-    with group_col:
-        group_by = st.selectbox(
-            "Group by",
-            available_groups,
-            key="group_by"
-        )
     # =========================
     # GROUP RESULT
     # =========================
