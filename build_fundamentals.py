@@ -43,7 +43,7 @@ CACHE_MAX_AGE_DAYS = 7
 WORKERS = 2
 DELAY = 1.0
 RETRIES = 4
-LIMIT = None  # Keep at 30 until the results are verified
+LIMIT = 1000  # Keep at 30 until the results are verified
 
 CRORE = 1e7
 
@@ -65,6 +65,17 @@ OUTPUT_COLUMNS = [
     "Ind PBV",
     "Symbol",
     "Industry",
+    "EV/EBIT",
+    "EV/EBITDA",
+    "EV/Sales",
+    "ROA %",
+    "Earnings Yield %",
+    "Gross Profit Margin %",
+    "Net Profit Margin %",
+    "Operating Margin %",
+    "Debt/Equity",
+    "Annual Revenue Growth %",
+    "Annual Net Income Growth %",
 ]
 
 
@@ -339,6 +350,27 @@ def compute(symbol):
     income = get_statement(ticker, "income_stmt")
     balance = get_statement(ticker, "balance_sheet")
 
+    # Additional annual statement data
+    annual_revenue = row(
+        income,
+        ["Total Revenue", "Operating Revenue"],
+    )
+
+    annual_net_income = row(
+        income,
+        ["Net Income", "Net Income Common Stockholders"],
+    )
+
+    annual_ebit = statement_value(
+        income,
+        ["EBIT", "Operating Income", "Ebit"],
+    )
+
+    total_debt = statement_value(
+        balance,
+        ["Total Debt"],
+    )
+
     ebit = statement_value(
         income,
         [
@@ -405,6 +437,71 @@ def compute(symbol):
 
     out["ROE %"] = roe
 
+    # ========================================================
+    # ADDITIONAL FUNDAMENTAL METRICS
+    # ========================================================
+
+    enterprise_value = num(info.get("enterpriseValue"))
+
+    # EV / EBIT
+    out["EV/EBIT"] = (
+        enterprise_value / annual_ebit
+        if enterprise_value is not None
+        and annual_ebit is not None
+        and annual_ebit > 0
+        else None
+    )
+
+    # Yahoo Finance valuation multiples
+    out["EV/EBITDA"] = num(info.get("enterpriseToEbitda"))
+    out["EV/Sales"] = num(info.get("enterpriseToRevenue"))
+
+    # Return on Assets
+    out["ROA %"] = pct("returnOnAssets")
+
+    # Earnings Yield
+    out["Earnings Yield %"] = (
+        100 / pe if pe is not None and pe > 0 else None
+    )
+
+    # Profitability margins
+    out["Gross Profit Margin %"] = pct("grossMargins")
+    out["Net Profit Margin %"] = pct("profitMargins")
+    out["Operating Margin %"] = pct("operatingMargins")
+
+    # Debt / Equity
+    out["Debt/Equity"] = (
+        total_debt / equity
+        if total_debt is not None
+        and equity is not None
+        and equity > 0
+        else None
+    )
+
+    # Annual Revenue Growth
+    out["Annual Revenue Growth %"] = None
+
+    if annual_revenue is not None and len(annual_revenue) >= 2:
+        latest = num(annual_revenue.iloc[0])
+        previous = num(annual_revenue.iloc[1])
+
+        if latest is not None and previous is not None and previous != 0:
+            out["Annual Revenue Growth %"] = (
+                (latest / previous) - 1
+            ) * 100
+
+    # Annual Net Income Growth
+    out["Annual Net Income Growth %"] = None
+
+    if annual_net_income is not None and len(annual_net_income) >= 2:
+        latest = num(annual_net_income.iloc[0])
+        previous = num(annual_net_income.iloc[1])
+
+        if latest is not None and previous is not None and previous > 0:
+            out["Annual Net Income Growth %"] = (
+                (latest / previous) - 1
+            ) * 100
+
     # Internal diagnostics, not written to the final CSV.
     if roce is None:
         missing = []
@@ -442,10 +539,25 @@ def get_stock(symbol):
 
                 # Reuse only valid records with ROCE diagnostics.
                 # Old cached records are refreshed once by this version.
+                required_metrics = [
+                    "EV/EBIT",
+                    "EV/EBITDA",
+                    "EV/Sales",
+                    "ROA %",
+                    "Earnings Yield %",
+                    "Gross Profit Margin %",
+                    "Net Profit Margin %",
+                    "Operating Margin %",
+                    "Debt/Equity",
+                    "Annual Revenue Growth %",
+                    "Annual Net Income Growth %",
+                ]
+
                 if (
                     isinstance(cached, dict)
                     and "ROCE %" in cached
                     and "_roce_issue" in cached
+                    and all(key in cached for key in required_metrics)
                 ):
                     return cached
 
