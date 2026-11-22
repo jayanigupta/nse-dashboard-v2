@@ -43,7 +43,7 @@ CACHE_MAX_AGE_DAYS = 7
 WORKERS = 2
 DELAY = 1.0
 RETRIES = 4
-LIMIT = 1000  # Keep at 30 until the results are verified
+LIMIT = None  # Keep at 30 until the results are verified
 
 CRORE = 1e7
 
