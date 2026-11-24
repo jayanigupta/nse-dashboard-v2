@@ -40,6 +40,82 @@ st.markdown(
 )
 
 st.caption("Data sources: NSE India · Market Lens · Yahoo Finance")
+
+
+
+# =========================
+# DISPLAY FORMATTING
+# =========================
+
+PERCENT_COLUMNS = {
+    "Div Yld %",
+    "Qtr Profit Var %",
+    "Qtr Sales Var %",
+    "ROCE %",
+    "ROE %",
+    "ROA %",
+    "Earnings Yield %",
+    "Gross Profit Margin %",
+    "Net Profit Margin %",
+    "Operating Margin %",
+    "Annual Revenue Growth %",
+    "Annual Net Income Growth %",
+}
+
+FORECAST_PERCENT_COLUMNS = {
+    "Forecast EPS Growth",
+    "Forecast Revenue Growth",
+}
+
+AMOUNT_COLUMNS = {
+    "CMP Rs.",
+    "Mar Cap Rs.Cr.",
+    "NP Qtr Rs.Cr.",
+    "Sales Qtr Rs.Cr.",
+    "Forecast EPS",
+    "Forecast Revenue",
+}
+
+
+def format_financial_table(table):
+    formatters = {}
+
+    for column in table.columns:
+        if column in PERCENT_COLUMNS:
+            formatters[column] = lambda x: (
+                f"{float(x):,.2f}%"
+                if pd.notna(x) and str(x).strip() != ""
+                else "—"
+            )
+
+        elif column in FORECAST_PERCENT_COLUMNS:
+            formatters[column] = lambda x: (
+                f"{float(x) * 100:,.2f}%"
+                if pd.notna(x)
+                and str(x).strip() != ""
+                and "%" not in str(x)
+                else str(x)
+                if pd.notna(x) and str(x).strip() != ""
+                else "—"
+            )
+
+        elif column in AMOUNT_COLUMNS:
+            formatters[column] = lambda x: (
+                f"{float(x):,.2f}"
+                if pd.notna(x) and str(x).strip() != ""
+                else "—"
+            )
+
+        elif pd.api.types.is_numeric_dtype(table[column]):
+            formatters[column] = lambda x: (
+                f"{float(x):,.2f}"
+                if pd.notna(x) and str(x).strip() != ""
+                else "—"
+            )
+
+    return formatters
+
+
 # =========================
 # DOWNLOAD DATA FILES
 # =========================
@@ -1578,12 +1654,11 @@ if st.session_state.screen_result is not None:
 
             
             styled_peer_table = (
-                display_table.style
-                .apply(
-                    highlight_peer_table,
-                    axis=0
+                    display_table.style
+                    .apply(highlight_peer_table, axis=0)
+                    .format(format_financial_table(display_table))
                 )
-            )
+            
 
             company_table_event = st.dataframe(
                 styled_peer_table,
@@ -1852,6 +1927,7 @@ if st.session_state.screen_result is not None:
                                 highlight_company_value,
                                 axis=1
                             ),
+                            format(format_financial_table(comparison_df)),
                             use_container_width=True,
                             hide_index=True
                         )
@@ -1961,7 +2037,9 @@ if st.session_state.screen_result is not None:
         ].copy()
 
         st.dataframe(
-            display_result,
+            display_result.style.format(
+                format_financial_table(display_result)
+            ),
             use_container_width=True,
             hide_index=True
         )
