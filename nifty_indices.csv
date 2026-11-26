@@ -193,7 +193,7 @@ DLF,DLF Ltd.,No,Yes,Yes,No,No,No,No
 DMART,Avenue Supermarts Ltd.,No,Yes,Yes,No,No,No,No
 DOMS,DOMS Industries Ltd.,No,No,Yes,No,No,Yes,Yes
 DRREDDY,Dr. Reddy's Laboratories Ltd.,Yes,Yes,Yes,No,No,No,No
-DUMMYHEG,Dummy HEG Ltd.,No,No,Yes,No,No,Yes,Yes
+DUMMYHEG,,No,No,Yes,No,No,No,No
 DUMMYINXGN,Dummy Inox Green Ltd.,No,No,Yes,No,No,No,Yes
 DYNAMATECH,Dynamatic Technologies Ltd.,No,No,Yes,No,No,No,Yes
 E2E,E2E NETWORKS Ltd.,No,No,Yes,No,No,No,Yes
@@ -288,6 +288,7 @@ HDFCAMC,HDFC Asset Management Company Ltd.,No,Yes,Yes,No,No,No,No
 HDFCBANK,HDFC Bank Ltd.,Yes,Yes,Yes,No,No,No,No
 HDFCLIFE,HDFC Life Insurance Company Ltd.,Yes,Yes,Yes,No,No,No,No
 HEGAM,HEG Advanced Materials Ltd.,No,No,Yes,No,No,Yes,Yes
+HEGRAPHITE,HEG Ltd.,No,No,No,No,No,Yes,Yes
 HERITGFOOD,Heritage Foods Ltd.,No,No,Yes,No,No,No,Yes
 HEROMOTOCO,Hero MotoCorp Ltd.,No,No,Yes,Yes,Yes,No,No
 HEXT,Hexaware Technologies Ltd.,No,No,Yes,Yes,No,No,No
